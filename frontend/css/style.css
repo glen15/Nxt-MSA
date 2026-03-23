@@ -1,0 +1,185 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f2f5;
+  color: #1a1a2e;
+  min-height: 100vh;
+}
+
+header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: white;
+  padding: 2rem;
+  text-align: center;
+}
+
+header h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+.subtitle { color: #a0aec0; font-size: 0.95rem; }
+
+.status-badge {
+  display: inline-block;
+  margin-top: 0.8rem;
+  padding: 0.3rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.status-badge.connected { background: #48bb78; color: white; }
+.status-badge.disconnected { background: #fc8181; color: white; }
+
+main {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.card h2 { margin-bottom: 1rem; font-size: 1.2rem; }
+
+/* 부품 재고 그리드 */
+.parts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.part-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  position: relative;
+}
+.part-card.low-stock { border-color: #fc8181; background: #fff5f5; }
+.part-card .part-name { font-weight: 700; font-size: 1rem; }
+.part-card .part-id { color: #718096; font-size: 0.8rem; }
+
+.stock-bar {
+  margin-top: 0.8rem;
+  background: #e2e8f0;
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+}
+.stock-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+.stock-bar-fill.healthy { background: #48bb78; }
+.stock-bar-fill.warning { background: #ecc94b; }
+.stock-bar-fill.danger { background: #fc8181; }
+
+.stock-numbers {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+}
+.stock-current { font-weight: 700; }
+.stock-threshold { color: #a0aec0; }
+
+/* 차량 주문 버튼 */
+.vehicle-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.vehicle-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1.2rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.vehicle-btn:hover { border-color: #4299e1; background: #ebf8ff; transform: translateY(-2px); }
+.vehicle-btn:active { transform: translateY(0); }
+.vehicle-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.vehicle-icon { font-size: 2rem; }
+.vehicle-name { font-weight: 700; font-size: 0.95rem; }
+.vehicle-parts { color: #718096; font-size: 0.8rem; }
+
+/* 주문/발주 목록 */
+.orders-list, .purchase-orders-list { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+th, td {
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+th { background: #f7fafc; font-weight: 600; color: #4a5568; }
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge.received { background: #bee3f8; color: #2b6cb0; }
+.badge.allocated { background: #c6f6d5; color: #276749; }
+.badge.waiting { background: #fefcbf; color: #975a16; }
+.badge.completed { background: #c6f6d5; color: #276749; }
+.badge.ordered { background: #e9d8fd; color: #553c9a; }
+.badge.failed { background: #fed7d7; color: #9b2c2c; }
+
+.loading { text-align: center; padding: 2rem; color: #a0aec0; }
+.empty { text-align: center; padding: 1.5rem; color: #a0aec0; }
+
+/* 토스트 알림 */
+#toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.toast {
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+  max-width: 350px;
+}
+.toast.success { background: #48bb78; }
+.toast.error { background: #fc8181; }
+.toast.info { background: #4299e1; }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+footer {
+  text-align: center;
+  padding: 2rem;
+  color: #a0aec0;
+  font-size: 0.85rem;
+}

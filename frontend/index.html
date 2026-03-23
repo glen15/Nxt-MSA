@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚗 차량 조립 공장 — 부품 재고 관리</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>🚗 차량 조립 공장</h1>
+    <p class="subtitle">부품 재고 관리 시스템 (MSA)</p>
+    <div id="connection-status" class="status-badge disconnected">서버 연결 확인 중...</div>
+  </header>
+
+  <main>
+    <!-- 재고 현황 -->
+    <section class="card">
+      <h2>📦 부품 재고 현황</h2>
+      <div id="parts-grid" class="parts-grid">
+        <div class="loading">로딩 중...</div>
+      </div>
+    </section>
+
+    <!-- 주문 생성 -->
+    <section class="card">
+      <h2>🛒 차량 주문</h2>
+      <div class="order-form">
+        <div class="vehicle-options">
+          <button class="vehicle-btn" data-model="sedan" onclick="createOrder('sedan')">
+            <span class="vehicle-icon">🚗</span>
+            <span class="vehicle-name">세단 (내연기관)</span>
+            <span class="vehicle-parts">엔진×1 + 타이어×4</span>
+          </button>
+          <button class="vehicle-btn" data-model="ev" onclick="createOrder('ev')">
+            <span class="vehicle-icon">⚡</span>
+            <span class="vehicle-name">전기차</span>
+            <span class="vehicle-parts">배터리×2 + 타이어×4</span>
+          </button>
+          <button class="vehicle-btn" data-model="suv" onclick="createOrder('suv')">
+            <span class="vehicle-icon">🚙</span>
+            <span class="vehicle-name">SUV (하이브리드)</span>
+            <span class="vehicle-parts">엔진×1 + 타이어×4 + 배터리×1</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 주문 목록 -->
+    <section class="card">
+      <h2>📋 주문 목록</h2>
+      <div id="orders-list" class="orders-list">
+        <div class="loading">로딩 중...</div>
+      </div>
+    </section>
+
+    <!-- 발주 현황 -->
+    <section class="card">
+      <h2>🏭 발주 현황</h2>
+      <div id="purchase-orders-list" class="purchase-orders-list">
+        <div class="loading">로딩 중...</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Nxt-MSA Workshop — AWS 마이크로서비스 아키텍처 실습</p>
+  </footer>
+
+  <div id="toast-container"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

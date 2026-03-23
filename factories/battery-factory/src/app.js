@@ -1,0 +1,107 @@
+const express = require('express');
+const { v4: uuidv4 } = require('uuid');
+const { chaosMiddleware, chaosRouter } = require('../../shared/chaos');
+const { publishReceivingMessage } = require('../../shared/snsPublisher');
+
+const app = express();
+const PORT = process.env.PORT || 3003;
+
+app.use(express.json());
+app.use(chaosMiddleware);
+app.use('/admin', chaosRouter(express));
+
+// 주문 저장소
+const orderStore = new Map();
+
+// 헬스 체크 — 배터리 공장은 /api/ping (또 다른 이름 — 교육 포인트)
+app.get('/api/ping', (req, res) => {
+  res.status(200).send('pong');
+});
+
+// 생산 요청 — POST /api/orders
+// 배터리 공장의 고유 API (주문 접수 스타일)
+app.post('/api/orders', async (req, res) => {
+  const { purchaseOrderId, partId, quantity } = req.body;
+
+  if (!purchaseOrderId || !partId || !quantity) {
+    return res.status(422).json({
+      errors: [
+        ...(!purchaseOrderId ? [{ field: 'purchaseOrderId', message: '필수 항목입니다' }] : []),
+        ...(!partId ? [{ field: 'partId', message: '필수 항목입니다' }] : []),
+        ...(!quantity ? [{ field: 'quantity', message: '필수 항목입니다' }] : []),
+      ],
+    });
+  }
+
+  const orderNumber = `BAT-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  const order = {
+    orderNumber,
+    purchaseOrderId,
+    partId,
+    quantity,
+    state: 'QUEUED',
+    queuedAt: new Date().toISOString(),
+  };
+
+  orderStore.set(orderNumber, order);
+  console.log(`[배터리공장] 주문 접수: ${partId} × ${quantity} (${orderNumber})`);
+
+  // 비동기 생산 — 배터리는 생산 시간이 김 (5~12초)
+  const delay = 5000 + Math.random() * 7000;
+
+  setTimeout(() => {
+    order.state = 'CHARGING_CELLS';
+    console.log(`[배터리공장] 셀 충전 중: ${orderNumber}`);
+  }, delay * 0.3);
+
+  setTimeout(() => {
+    order.state = 'ASSEMBLING_PACK';
+    console.log(`[배터리공장] 팩 조립 중: ${orderNumber}`);
+  }, delay * 0.7);
+
+  setTimeout(async () => {
+    order.state = 'SHIPPED';
+    order.shippedAt = new Date().toISOString();
+    console.log(`[배터리공장] 출하 완료: ${partId} × ${quantity} (${Math.round(delay / 1000)}초)`);
+
+    try {
+      await publishReceivingMessage({
+        purchaseOrderId,
+        partId,
+        quantity,
+        factoryId: 'battery-factory',
+      });
+    } catch (err) {
+      console.error('[배터리공장] SNS 발행 실패:', err.message);
+    }
+  }, delay);
+
+  // 200 OK — 배터리 공장은 200으로 응답 (또 다른 차이점)
+  res.status(200).json({
+    orderNumber,
+    accepted: true,
+    estimatedMinutes: Math.round(delay / 60000 * 10) / 10,
+  });
+});
+
+// 주문 상태 조회 — POST /api/orders/status (GET이 아닌 POST — 교육 포인트)
+app.post('/api/orders/status', (req, res) => {
+  const { orderNumber } = req.body;
+  if (!orderNumber) {
+    return res.status(400).json({ error: 'orderNumber 필수' });
+  }
+
+  const order = orderStore.get(orderNumber);
+  if (!order) {
+    return res.status(404).json({ error: '주문을 찾을 수 없습니다.' });
+  }
+  res.json(order);
+});
+
+app.listen(PORT, () => {
+  console.log(`\n🔋 배터리 공장 서버 (포트: ${PORT})`);
+  console.log(`   주문 접수: POST /api/orders`);
+  console.log(`   상태 조회: POST /api/orders/status`);
+  console.log(`   헬스 체크: GET /api/ping`);
+  console.log(`   장애 주입: POST /admin/chaos\n`);
+});

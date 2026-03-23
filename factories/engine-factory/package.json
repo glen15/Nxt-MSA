@@ -1,0 +1,15 @@
+{
+  "name": "nxt-msa-engine-factory",
+  "version": "1.0.0",
+  "description": "엔진 공장 서버 (내연기관/하이브리드용)",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.700.0",
+    "express": "^4.21.0",
+    "uuid": "^11.0.0"
+  }
+}
