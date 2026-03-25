@@ -2,6 +2,7 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const config = require('./config');
+const { DynamoDBClient, DescribeTableCommand } = require('@aws-sdk/client-dynamodb');
 const partsRouter = require('./routes/parts');
 const ordersRouter = require('./routes/orders');
 const purchaseOrdersRouter = require('./routes/purchaseOrders');
@@ -35,10 +36,36 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: '서버 내부 오류가 발생했습니다.' });
 });
 
-app.listen(config.port, () => {
-  console.log(`\n🚗 NxtCar 메인 앱서버`);
-  console.log(`   포트: ${config.port}`);
-  console.log(`   리전: ${config.aws.region}`);
-  console.log(`   SNS 발주토픽: ${config.sns.orderingTopicArn || '(미설정)'}`);
+app.listen(config.port, async () => {
+  console.log(`\n🚗 NxtCar 메인 앱서버 (포트: ${config.port})`);
+  console.log(`   리전: ${config.aws.region}\n`);
+
+  // DynamoDB 테이블 연결 확인
+  const dynamo = new DynamoDBClient({ region: config.aws.region });
+  const tables = [
+    { name: config.tables.parts, label: 'Parts' },
+    { name: config.tables.orders, label: 'Orders' },
+    { name: config.tables.purchaseOrders, label: 'PurchaseOrders' },
+  ];
+
+  console.log('   [DynamoDB]');
+  for (const t of tables) {
+    try {
+      const res = await dynamo.send(new DescribeTableCommand({ TableName: t.name }));
+      const count = res.Table.ItemCount;
+      console.log(`   ✅ ${t.label} — 연결됨 (${count}건)`);
+    } catch (err) {
+      if (err.name === 'ResourceNotFoundException') {
+        console.log(`   ❌ ${t.label} — 테이블 없음`);
+      } else {
+        console.log(`   ❌ ${t.label} — ${err.message}`);
+      }
+    }
+  }
+
+  // SNS 연결 상태
+  console.log('\n   [SNS]');
+  console.log(`   ${config.sns.orderingTopicArn ? '✅ 발주토픽: ' + config.sns.orderingTopicArn : '❌ 발주토픽 — 미설정'}`);
+
   console.log();
 });
