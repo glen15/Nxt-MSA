@@ -16,7 +16,7 @@ gpgcheck=1
 gpgkey=https://download.docker.com/linux/centos/gpg
 REPO
 
-dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+dnf install -y --allowerasing docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 systemctl enable --now docker
 usermod -aG docker ec2-user
 
