@@ -44,24 +44,28 @@ async function deductAndCheck(requiredParts) {
   const results = [];
   const missingParts = {};
 
+  // 1단계: 재고 차감 (반드시 전부 시도)
   for (const [partId, qty] of Object.entries(requiredParts)) {
     try {
       const updated = await partsModel.deductStock(partId, qty);
       results.push({ partId, success: true, remaining: updated.currentStock });
-
-      // 차감 후 임계치 체크 → 자동 발주
-      await checkAndOrder(partId);
     } catch (err) {
       if (err.name === 'ConditionalCheckFailedException') {
         const part = await partsModel.getById(partId);
         missingParts[partId] = qty - (part?.currentStock || 0);
         results.push({ partId, success: false, missing: missingParts[partId] });
-
-        // 재고 부족이면 즉시 발주
-        await checkAndOrder(partId);
       } else {
         throw err;
       }
+    }
+  }
+
+  // 2단계: 임계치 체크 → 자동 발주 (실패해도 차감에 영향 없음)
+  for (const r of results) {
+    try {
+      await checkAndOrder(r.partId);
+    } catch (err) {
+      console.error(`[발주 체크 실패] ${r.partId}: ${err.message}`);
     }
   }
 
