@@ -5,8 +5,17 @@ echo "=== 배포 시작: $(date) ==="
 
 echo "=== [1/4] Docker CE 공식 리포 설치 ==="
 dnf install -y git
-# AL2023 기본 docker 대신 공식 Docker CE (최신 buildx + compose 포함)
-dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+# AL2023용 Docker CE 리포 (CentOS 9 호환)
+cat > /etc/yum.repos.d/docker-ce.repo << 'REPO'
+[docker-ce-stable]
+name=Docker CE Stable
+baseurl=https://download.docker.com/linux/centos/9/$basearch/stable
+enabled=1
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/centos/gpg
+REPO
+
 dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 systemctl enable --now docker
 usermod -aG docker ec2-user
