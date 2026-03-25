@@ -290,9 +290,16 @@ npm start
 
 ## Step 4: 시드 데이터 입력 (10분)
 
-Parts 테이블에 초기 재고 데이터 3건을 입력합니다.
+Parts 테이블에 초기 재고 데이터 3건을 입력합니다. 3가지 방법 중 하나를 선택하세요.
 
-### 4-1. 콘솔에서 항목 입력
+> 💡 **부품별 의미:**
+> - `currentStock`: 현재 재고 수량
+> - `threshold`: 이 수치 이하로 떨어지면 자동 발주 트리거
+> - `orderQuantity`: 발주 시 요청하는 수량
+
+### 방법 A: 콘솔에서 항목 만들기 (1건씩)
+
+DynamoDB의 기본적인 데이터 입력 방법입니다. 1건씩 반복합니다.
 
 1. DynamoDB 콘솔 → `<USER_PREFIX>-Parts` 테이블 클릭
 2. **항목 탐색** 탭 → **항목 만들기**
@@ -347,9 +354,52 @@ Parts 테이블에 초기 재고 데이터 3건을 입력합니다.
 > `{"S": "..."}` = 문자열(String), `{"N": "..."}` = 숫자(Number)
 > 숫자도 문자열로 감싸야 합니다 (`"50"`, `"200"` 등)
 
-### 4-2. 콘솔에서 확인
+### 방법 B: PartiQL 편집기 (SQL 스타일, 콘솔에서 한번에)
 
-**항목 탐색** 탭에서 3개 항목이 보이는지 확인합니다:
+DynamoDB 왼쪽 메뉴 → **PartiQL 편집기**에서 아래 쿼리를 하나씩 실행합니다.
+PartiQL은 SQL과 비슷한 문법으로 DynamoDB를 조작할 수 있고, DynamoDB JSON 형식(`{"S":"..."}`)을 쓰지 않아도 됩니다.
+
+> ⚠️ 테이블 이름을 본인 `USER_PREFIX`로 바꿔서 실행하세요.
+
+```sql
+INSERT INTO "kmucd1-03-Parts" value {
+  'partId':'ENGINE-V6','partName':'V6 엔진','category':'engine',
+  'currentStock':50,'threshold':20,'orderQuantity':100,
+  'updatedAt':'2026-03-26T00:00:00Z'
+}
+```
+```sql
+INSERT INTO "kmucd1-03-Parts" value {
+  'partId':'TIRE-R18','partName':'R18 타이어','category':'tire',
+  'currentStock':200,'threshold':80,'orderQuantity':400,
+  'updatedAt':'2026-03-26T00:00:00Z'
+}
+```
+```sql
+INSERT INTO "kmucd1-03-Parts" value {
+  'partId':'BATTERY-72KWH','partName':'72kWh 배터리','category':'battery',
+  'currentStock':30,'threshold':10,'orderQuantity':50,
+  'updatedAt':'2026-03-26T00:00:00Z'
+}
+```
+
+### 방법 C: CLI batch-write (Cloud9에서 한 명령으로)
+
+Cloud9 터미널에서 3건을 한번에 넣습니다. 테이블 이름을 본인 것으로 바꾸세요.
+
+```bash
+aws dynamodb batch-write-item --region us-east-1 --request-items '{
+  "<USER_PREFIX>-Parts": [
+    {"PutRequest":{"Item":{"partId":{"S":"ENGINE-V6"},"partName":{"S":"V6 엔진"},"category":{"S":"engine"},"currentStock":{"N":"50"},"threshold":{"N":"20"},"orderQuantity":{"N":"100"},"updatedAt":{"S":"2026-03-26T00:00:00Z"}}}},
+    {"PutRequest":{"Item":{"partId":{"S":"TIRE-R18"},"partName":{"S":"R18 타이어"},"category":{"S":"tire"},"currentStock":{"N":"200"},"threshold":{"N":"80"},"orderQuantity":{"N":"400"},"updatedAt":{"S":"2026-03-26T00:00:00Z"}}}},
+    {"PutRequest":{"Item":{"partId":{"S":"BATTERY-72KWH"},"partName":{"S":"72kWh 배터리"},"category":{"S":"battery"},"currentStock":{"N":"30"},"threshold":{"N":"10"},"orderQuantity":{"N":"50"},"updatedAt":{"S":"2026-03-26T00:00:00Z"}}}}
+  ]
+}'
+```
+
+### 4-1. 콘솔에서 확인
+
+어떤 방법을 사용했든, DynamoDB 콘솔 → `<USER_PREFIX>-Parts` → **항목 탐색** 탭에서 3개 항목:
 
 | partId | partName | currentStock | threshold | orderQuantity |
 |--------|----------|:------------:|:---------:|:-------------:|
@@ -357,12 +407,7 @@ Parts 테이블에 초기 재고 데이터 3건을 입력합니다.
 | TIRE-R18 | R18 타이어 | 200 | 80 | 400 |
 | BATTERY-72KWH | 72kWh 배터리 | 30 | 10 | 50 |
 
-> 💡 **부품별 의미:**
-> - `currentStock`: 현재 재고 수량
-> - `threshold`: 이 수치 이하로 떨어지면 자동 발주 트리거
-> - `orderQuantity`: 발주 시 요청하는 수량
-
-### 4-3. API로 데이터 확인
+### 4-2. API로 데이터 확인
 
 Cloud9 터미널에서:
 
