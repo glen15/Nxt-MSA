@@ -33,10 +33,16 @@ data "aws_vpc" "default" {
   default = true
 }
 
-data "aws_subnets" "default" {
+# 퍼블릭 IP 자동 할당이 켜진 서브넷만 선택
+data "aws_subnets" "public" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.default.id]
+  }
+
+  filter {
+    name   = "map-public-ip-on-launch"
+    values = ["true"]
   }
 }
 
@@ -126,7 +132,8 @@ resource "aws_instance" "factory" {
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.factory.id]
   iam_instance_profile   = aws_iam_instance_profile.factory.name
-  subnet_id              = data.aws_subnets.default.ids[0]
+  subnet_id                   = data.aws_subnets.public.ids[0]
+  associate_public_ip_address = true
 
   # IMDSv2 필수 (AL2023 기본 동작과 일치)
   metadata_options {
@@ -137,7 +144,7 @@ resource "aws_instance" "factory" {
 
   # Docker build 시 메모리 여유를 위해 20GB
   root_block_device {
-    volume_size = 20
+    volume_size = 30
     volume_type = "gp3"
   }
 
