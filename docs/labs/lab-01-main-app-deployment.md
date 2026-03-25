@@ -8,7 +8,6 @@ DynamoDB를 연결하여 차량 주문 시스템을 완성한다.
 - Cloud9 IDE 환경 (m5.large)
 - 소스 코드 클론 완료: `git clone https://github.com/glen15/Nxt-MSA.git`
 - 강사가 안내한 본인 유저 ID (예: `kmucd1-03`)
-- Cloud9 EC2 보안그룹에 포트 **3000** 인바운드 오픈
 
 ## 전체 흐름
 
@@ -108,7 +107,20 @@ http://<버킷이름>.s3-website-us-east-1.amazonaws.com
 
 ## Step 2: 환경변수 설정 + 서버 시작 (15분)
 
-### 2-1. .env 파일 생성
+### 2-1. 보안그룹에 포트 3000 열기
+
+1. AWS 콘솔 → EC2 → **보안 그룹**
+2. Cloud9에 연결된 보안그룹 선택 (이름에 `cloud9` 또는 `aws-cloud9`이 포함)
+3. **인바운드 규칙** → **인바운드 규칙 편집**
+4. **규칙 추가**:
+   - 유형: **사용자 지정 TCP**
+   - 포트 범위: `3000`
+   - 소스: `0.0.0.0/0`
+5. **규칙 저장**
+
+> S3 프론트엔드가 Cloud9의 API 서버를 호출하려면 이 포트가 외부에서 접근 가능해야 합니다.
+
+### 2-2. .env 파일 생성
 
 ```bash
 cd ~/environment/Nxt-MSA/main-app
@@ -126,7 +138,7 @@ AWS_REGION=us-east-1
 > ⚠️ `USER_PREFIX`는 강사가 안내한 본인 번호를 정확히 입력하세요.
 > 이 값으로 DynamoDB 테이블 이름이 결정됩니다 (예: `kmucd1-03-Parts`).
 
-### 2-2. 의존성 설치 + 서버 시작
+### 2-3. 의존성 설치 + 서버 시작
 
 ```bash
 npm install
@@ -150,14 +162,34 @@ npm start
 
 서버가 정상적으로 떴지만, DynamoDB 테이블이 없다고 알려주고 있습니다.
 
-### 2-3. API 테스트 (새 터미널)
+### 2-4. 브라우저에서 API 확인
+
+브라우저에서 Cloud9 EC2의 퍼블릭 IP + 포트 3000으로 접속합니다:
+
+```
+http://<Cloud9퍼블릭IP>:3000/
+```
+
+**예상 결과:** API 엔드포인트 목록 JSON이 표시됩니다.
+```json
+{
+  "service": "NxtCar API",
+  "endpoints": {
+    "health": "GET /api/health",
+    "parts": "GET /api/parts",
+    "orders": "GET /api/orders | POST /api/orders",
+    "purchaseOrders": "GET /api/purchase-orders"
+  }
+}
+```
+
+> 💡 이 서버는 API 전용입니다. 프론트엔드(HTML)는 S3가 담당하고, 이 서버는 데이터만 제공합니다.
+
+### 2-5. API 테스트 (새 터미널)
 
 Cloud9에서 터미널을 하나 더 열고 (`+` 버튼 → New Terminal):
 
 ```bash
-# API 루트 — 엔드포인트 목록 확인
-curl http://localhost:3000/ | jq
-
 # 헬스 체크
 curl http://localhost:3000/api/health | jq
 
@@ -166,7 +198,6 @@ curl http://localhost:3000/api/parts
 ```
 
 **예상 결과:**
-- ✅ `GET /` → API 엔드포인트 목록 JSON
 - ✅ `GET /api/health` → `{ "status": "running" }`
 - ❌ `GET /api/parts` → 500 에러 (테이블 없음)
 
