@@ -36,7 +36,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(config.port, () => {
-  console.log(`\n🚗 차량 조립 공장 메인 앱서버`);
+  console.log(`\n🚗 NxtCar 메인 앱서버`);
   console.log(`   포트: ${config.port}`);
   console.log(`   리전: ${config.aws.region}`);
   console.log(`   공장 엔진: ${config.factories.engine}`);
