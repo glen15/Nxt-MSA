@@ -39,9 +39,6 @@ app.listen(config.port, () => {
   console.log(`\n🚗 NxtCar 메인 앱서버`);
   console.log(`   포트: ${config.port}`);
   console.log(`   리전: ${config.aws.region}`);
-  console.log(`   공장 엔진: ${config.factories.engine}`);
-  console.log(`   공장 타이어: ${config.factories.tire}`);
-  console.log(`   공장 배터리: ${config.factories.battery}`);
   console.log(`   SNS 발주토픽: ${config.sns.orderingTopicArn || '(미설정)'}`);
   console.log();
 });
