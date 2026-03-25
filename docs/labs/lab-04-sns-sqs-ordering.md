@@ -49,7 +49,7 @@ SNS → `parts-ordering` 토픽 → 구독 생성:
 ## Step 4: 메인 앱에 SNS ARN 설정
 
 ```bash
-export ORDERING_TOPIC_ARN=arn:aws:sns:ap-northeast-2:<계정ID>:parts-ordering
+export ORDERING_TOPIC_ARN=arn:aws:sns:us-east-1:<계정ID>:parts-ordering
 npm start
 ```
 

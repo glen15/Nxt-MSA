@@ -1,7 +1,7 @@
 const config = {
   port: process.env.PORT || 3000,
   aws: {
-    region: process.env.AWS_REGION || 'ap-northeast-2',
+    region: process.env.AWS_REGION || 'us-east-1',
   },
   tables: {
     parts: process.env.PARTS_TABLE || 'Parts',

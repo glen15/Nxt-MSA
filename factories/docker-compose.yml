@@ -9,7 +9,7 @@ services:
     environment:
       - FACTORY_DB_PATH=/data/factory.db
       - RECEIVING_TOPIC_ARN=${RECEIVING_TOPIC_ARN:-}
-      - AWS_REGION=${AWS_REGION:-ap-northeast-2}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
     restart: unless-stopped
 
   tire:
@@ -22,7 +22,7 @@ services:
     environment:
       - FACTORY_DB_PATH=/data/factory.db
       - RECEIVING_TOPIC_ARN=${RECEIVING_TOPIC_ARN:-}
-      - AWS_REGION=${AWS_REGION:-ap-northeast-2}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
     restart: unless-stopped
 
   battery:
@@ -35,7 +35,7 @@ services:
     environment:
       - FACTORY_DB_PATH=/data/factory.db
       - RECEIVING_TOPIC_ARN=${RECEIVING_TOPIC_ARN:-}
-      - AWS_REGION=${AWS_REGION:-ap-northeast-2}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
     restart: unless-stopped
 
   hub:

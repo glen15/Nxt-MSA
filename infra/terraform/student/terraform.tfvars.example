@@ -1,4 +1,4 @@
-aws_region         = "ap-northeast-2"
+aws_region         = "us-east-1"
 factory_ip         = "3.x.x.x"
 key_name           = "your-key-pair-name"
 student_name       = "hong"

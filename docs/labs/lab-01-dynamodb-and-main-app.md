@@ -72,7 +72,7 @@ npm install
 
 환경변수 설정:
 ```bash
-export AWS_REGION=ap-northeast-2
+export AWS_REGION=us-east-1
 export ENGINE_FACTORY_URL=http://<강사IP>:3001
 export TIRE_FACTORY_URL=http://<강사IP>:3002
 export BATTERY_FACTORY_URL=http://<강사IP>:3003

@@ -1,4 +1,4 @@
-aws_region          = "ap-northeast-2"
+aws_region          = "us-east-1"
 key_name            = "your-key-pair-name"
 allowed_cidrs       = ["0.0.0.0/0"]
 instance_type       = "t4g.small"

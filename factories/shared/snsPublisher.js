@@ -1,7 +1,7 @@
 // 생산 완료 → SNS 입고 토픽 발행 (3개 공장 공통)
 const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
 
-const REGION = process.env.AWS_REGION || 'ap-northeast-2';
+const REGION = process.env.AWS_REGION || 'us-east-1';
 const RECEIVING_TOPIC_ARN = process.env.RECEIVING_TOPIC_ARN || '';
 
 const snsClient = new SNSClient({ region: REGION });

@@ -22,7 +22,7 @@ aws --version
 aws configure
 # AWS Access Key ID: (IAM 사용자 키)
 # AWS Secret Access Key: (IAM 사용자 시크릿)
-# Default region name: ap-northeast-2
+# Default region name: us-east-1
 # Default output format: json
 ```
 
