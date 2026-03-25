@@ -292,14 +292,15 @@ npm start
 
 Parts 테이블에 초기 재고 데이터 3건을 입력합니다.
 
-### 4-1. 콘솔에서 항목 추가
+### 4-1. 콘솔에서 첫 항목 직접 입력 (체험)
+
+DynamoDB JSON 형식을 직접 경험하기 위해 첫 1건은 콘솔에서 수동 입력합니다.
 
 1. DynamoDB 콘솔 → `<USER_PREFIX>-Parts` 테이블 클릭
 2. **항목 탐색** 탭 → **항목 만들기**
 3. 오른쪽 상단 **JSON 보기** 토글 켜기
-4. 아래 JSON을 붙여넣고 **항목 만들기** 클릭
+4. 기존 내용을 지우고 아래 JSON을 붙여넣기:
 
-**① ENGINE-V6 (V6 엔진)**
 ```json
 {
   "partId": {"S": "ENGINE-V6"},
@@ -312,43 +313,42 @@ Parts 테이블에 초기 재고 데이터 3건을 입력합니다.
 }
 ```
 
-> ⚠️ DynamoDB JSON 형식에 주의하세요.
-> `"currentStock": 50`이 아니라 `"currentStock": {"N": "50"}`입니다.
-> `{"S": "..."}` = 문자열, `{"N": "..."}` = 숫자 (값은 문자열로 감싸야 함)
+5. **항목 만들기** 클릭
 
-5. 다시 **항목 만들기** → JSON 보기 → 붙여넣기:
+> ⚠️ **DynamoDB JSON 형식에 주의하세요.**
+> 일반 JSON: `"currentStock": 50`
+> DynamoDB JSON: `"currentStock": {"N": "50"}`
+>
+> `{"S": "..."}` = 문자열(String), `{"N": "..."}` = 숫자(Number)
+> 숫자도 문자열로 감싸야 합니다 (`"50"`, `"200"` 등)
 
-**② TIRE-R18 (R18 타이어)**
-```json
-{
-  "partId": {"S": "TIRE-R18"},
-  "partName": {"S": "R18 타이어"},
-  "category": {"S": "tire"},
-  "currentStock": {"N": "200"},
-  "threshold": {"N": "80"},
-  "orderQuantity": {"N": "400"},
-  "updatedAt": {"S": "2026-03-26T00:00:00Z"}
-}
+6. 항목 탐색에서 ENGINE-V6이 추가된 것을 확인합니다.
+
+### 4-2. 나머지 2건은 스크립트로 입력
+
+Cloud9 터미널에서 제공된 시드 스크립트를 실행합니다:
+
+```bash
+cd ~/environment/Nxt-MSA/main-app
+bash scripts/seed.sh
 ```
 
-6. 다시 **항목 만들기** → JSON 보기 → 붙여넣기:
+**예상 출력:**
+```
+📦 시드 데이터 입력: kmucd1-03-Parts (us-east-1)
 
-**③ BATTERY-72KWH (72kWh 배터리)**
-```json
-{
-  "partId": {"S": "BATTERY-72KWH"},
-  "partName": {"S": "72kWh 배터리"},
-  "category": {"S": "battery"},
-  "currentStock": {"N": "30"},
-  "threshold": {"N": "10"},
-  "orderQuantity": {"N": "50"},
-  "updatedAt": {"S": "2026-03-26T00:00:00Z"}
-}
+  ✅ ENGINE-V6 (V6 엔진) — 재고: 50
+  ✅ TIRE-R18 (R18 타이어) — 재고: 200
+  ✅ BATTERY-72KWH (72kWh 배터리) — 재고: 30
+
+🎉 완료! kmucd1-03-Parts에 3건 입력됨
 ```
 
-### 4-2. 항목 확인
+> 💡 이미 콘솔에서 넣은 ENGINE-V6은 `put-item`이 덮어씁니다 (파티션 키가 같으면 교체). 중복 걱정 없습니다.
 
-**항목 탐색** 탭에서 3개 항목이 보이는지 확인합니다:
+### 4-3. 콘솔에서 확인
+
+DynamoDB 콘솔 → `<USER_PREFIX>-Parts` → **항목 탐색** 탭에서 3개 항목:
 
 | partId | partName | currentStock | threshold | orderQuantity |
 |--------|----------|:------------:|:---------:|:-------------:|
@@ -356,7 +356,7 @@ Parts 테이블에 초기 재고 데이터 3건을 입력합니다.
 | TIRE-R18 | R18 타이어 | 200 | 80 | 400 |
 | BATTERY-72KWH | 72kWh 배터리 | 30 | 10 | 50 |
 
-### 4-3. API로 데이터 확인
+### 4-4. API로 데이터 확인
 
 Cloud9 터미널에서:
 
