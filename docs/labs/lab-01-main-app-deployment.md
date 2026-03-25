@@ -205,6 +205,27 @@ curl http://localhost:3000/api/parts
 
 ## Step 3: DynamoDB 테이블 생성 (15분)
 
+### DynamoDB란?
+
+AWS의 NoSQL 데이터베이스입니다. RDB(MySQL, PostgreSQL)와 다른 점:
+
+| | RDB | DynamoDB |
+|---|---|---|
+| 스키마 | 테이블 생성 시 컬럼 정의 필수 | **파티션 키만** 정하면 됨. 나머지 필드는 자유 |
+| 조회 | `WHERE` 절로 아무 컬럼 검색 | **파티션 키**로 조회해야 빠름 |
+| 확장 | 서버 스펙 업그레이드 (Scale-up) | 자동 분산 (Scale-out) |
+| 용량 | 서버를 미리 준비 | **온디맨드**: 쓴 만큼만 과금 |
+
+**파티션 키**는 각 항목을 찾는 고유 주소입니다. DynamoDB는 이 키를 해시해서 데이터를 물리적으로 분산 저장합니다. 테이블이 아무리 커져도 파티션 키로 조회하면 항상 빠릅니다.
+
+우리가 만들 테이블 3개:
+
+| 테이블 | 파티션 키 | 저장하는 것 | 예시 |
+|--------|----------|-----------|------|
+| Parts | `partId` | 부품 재고 | `ENGINE-V6`, `TIRE-R18`, `BATTERY-72KWH` |
+| Orders | `orderId` | 차량 주문 | UUID (주문할 때마다 생성) |
+| PurchaseOrders | `purchaseOrderId` | 공장 발주 | UUID (재고 부족 시 생성) |
+
 본인 `USER_PREFIX`를 접두사로 테이블 3개를 생성합니다.
 
 > 예: USER_PREFIX가 `kmucd1-03`이면:
