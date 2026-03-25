@@ -115,6 +115,20 @@ async function createOrder(vehicleModel) {
 
 window.createOrder = createOrder;
 
+// ─── 재고 초기화 ───
+async function resetStock() {
+  if (!confirm('재고를 초기값으로 되돌리시겠습니까?')) return;
+  try {
+    await apiPost('/api/parts/reset', {});
+    showToast('재고가 초기화되었습니다.', 'success');
+    await refreshAll();
+  } catch (err) {
+    showToast(`초기화 실패: ${err.message}`, 'error');
+  }
+}
+
+window.resetStock = resetStock;
+
 // ─── 주문 목록 ───
 async function loadOrders() {
   const container = document.getElementById('orders-list');

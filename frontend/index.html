@@ -16,7 +16,10 @@
   <main>
     <!-- 재고 현황 -->
     <section class="card">
-      <h2>📦 부품 재고 현황</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2>📦 부품 재고 현황</h2>
+        <button class="reset-btn" onclick="resetStock()">🔄 재고 초기화</button>
+      </div>
       <div id="parts-grid" class="parts-grid">
         <div class="loading">로딩 중...</div>
       </div>

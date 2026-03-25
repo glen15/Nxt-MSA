@@ -1,4 +1,4 @@
-const { GetCommand, ScanCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
+const { GetCommand, ScanCommand, UpdateCommand, PutCommand } = require('@aws-sdk/lib-dynamodb');
 const docClient = require('./dynamo');
 const config = require('../config');
 
@@ -49,4 +49,9 @@ async function addStock(partId, quantity) {
   return result.Attributes;
 }
 
-module.exports = { getAll, getById, deductStock, addStock };
+async function upsert(item) {
+  await docClient.send(new PutCommand({ TableName: TABLE, Item: item }));
+  return item;
+}
+
+module.exports = { getAll, getById, deductStock, addStock, upsert };
