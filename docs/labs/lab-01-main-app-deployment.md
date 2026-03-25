@@ -352,7 +352,7 @@ curl http://localhost:3000/api/parts | jq
 Cloud9 EC2의 퍼블릭 IP를 확인합니다:
 
 ```bash
-curl -s http://169.254.169.254/latest/meta-data/public-ipv4
+curl http://checkip.amazonaws.com
 ```
 
 프론트엔드를 API 서버 주소와 함께 다시 빌드합니다:
