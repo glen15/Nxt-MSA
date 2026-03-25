@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const db = require('../shared/db');
 
 const app = express();
@@ -9,6 +10,9 @@ const FACTORIES = [
   { name: 'tire', port: 3002, displayName: '타이어 공장', emoji: '🛞', color: '#3498db' },
   { name: 'battery', port: 3003, displayName: '배터리 공장', emoji: '🔋', color: '#2ecc71' },
 ];
+
+// 정적 파일 서빙 (app.js)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // SQLite에서 직접 읽기 (HTTP 불필요)
 app.get('/api/factories', (req, res) => {
@@ -111,7 +115,6 @@ header {
 }
 
 .card-name { font-size: 1.1rem; font-weight: 600; color: #fff; }
-
 .card-stats { display: flex; gap: 1.5rem; font-size: 0.85rem; color: #888; }
 .card-stats span { display: flex; align-items: center; gap: 0.3rem; }
 .card-stat-num { font-weight: 700; font-size: 1.1rem; }
@@ -125,7 +128,6 @@ header {
 .stat-label { font-size: 0.75rem; color: #555; margin-top: 0.1rem; }
 
 main { padding: 0 2rem 2rem; }
-
 table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
 
 thead th {
@@ -191,6 +193,178 @@ td { padding: 0.7rem 0.8rem; font-size: 0.85rem; }
 .empty-state .icon { font-size: 3rem; margin-bottom: 0.8rem; opacity: 0.4; }
 .empty-state .text { font-size: 1rem; }
 
+/* API 문서 */
+.api-docs { padding: 1.5rem 2rem; max-width: 960px; }
+
+.api-factory {
+  margin-bottom: 2rem; border: 1px solid #1e1e32;
+  border-radius: 8px; overflow: hidden;
+}
+
+.api-factory-header {
+  padding: 0.8rem 1.2rem; font-size: 1rem; font-weight: 700;
+  color: #fff; display: flex; align-items: center; gap: 0.5rem;
+}
+
+.api-endpoint { padding: 1rem 1.2rem; border-top: 1px solid #1e1e32; }
+
+.api-endpoint-title {
+  display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem;
+}
+
+.method {
+  font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.5rem;
+  border-radius: 3px; font-family: 'SF Mono','Fira Code','Consolas',monospace;
+}
+
+.method.get { background: #2ecc7125; color: #2ecc71; }
+.method.post { background: #f39c1225; color: #f39c12; }
+.method.delete { background: #e74c3c25; color: #e74c3c; }
+
+.api-path {
+  font-family: 'SF Mono','Fira Code','Consolas',monospace;
+  font-size: 0.85rem; color: #ddd;
+}
+
+.api-desc { font-size: 0.8rem; color: #888; margin-bottom: 0.5rem; }
+
+.api-code {
+  background: #0a0a18; border: 1px solid #1a1a2e; border-radius: 4px;
+  padding: 0.7rem 1rem; overflow-x: auto; position: relative;
+}
+
+.api-code pre {
+  font-family: 'SF Mono','Fira Code','Consolas',monospace;
+  font-size: 0.78rem; color: #aaa; margin: 0;
+  white-space: pre; line-height: 1.5;
+}
+
+.copy-btn {
+  position: absolute; top: 0.4rem; right: 0.4rem;
+  background: #1e1e32; border: 1px solid #2a2a3e; color: #888;
+  padding: 0.2rem 0.5rem; border-radius: 3px; cursor: pointer;
+  font-size: 0.7rem;
+}
+
+.copy-btn:hover { color: #fff; background: #2a2a3e; }
+
+.api-label {
+  font-size: 0.7rem; color: #555; text-transform: uppercase;
+  letter-spacing: 0.05em; margin-bottom: 0.3rem; margin-top: 0.5rem;
+}
+
+.api-note {
+  background: #14142a; border-left: 3px solid #f39c12;
+  padding: 0.6rem 1rem; margin: 0 0 2rem 0; border-radius: 0 4px 4px 0;
+  font-size: 0.8rem; color: #ccc;
+}
+
+.api-note strong { color: #f39c12; }
+
+/* 아키텍처 설명 */
+.arch-section { padding: 0 2rem 2rem; max-width: 960px; }
+
+.arch-title {
+  font-size: 1.2rem; color: #fff; margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem; border-bottom: 1px solid #1e1e32;
+}
+
+.arch-subtitle {
+  font-size: 0.95rem; color: #ddd; margin: 1.5rem 0 0.8rem;
+}
+
+.arch-table {
+  width: 100%; border-collapse: collapse; margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+
+.arch-table th, .arch-table td {
+  padding: 0.6rem 0.8rem; border: 1px solid #1e1e32;
+  text-align: left;
+}
+
+.arch-table th { background: #12121f; color: #aaa; font-size: 0.8rem; }
+.arch-table td { background: #0e0e1a; }
+.arch-table code { color: #3498db; font-size: 0.8rem; }
+.arch-label { color: #888; font-weight: 600; font-size: 0.8rem; }
+.arch-diff { color: #f39c12 !important; font-weight: 600; }
+
+.arch-contract {
+  background: #0a0a18; border: 1px solid #1e1e32; border-radius: 6px;
+  padding: 1rem; margin-bottom: 0.8rem;
+}
+
+.arch-contract-label {
+  font-size: 0.75rem; color: #f39c12; text-transform: uppercase;
+  letter-spacing: 0.05em; margin-bottom: 0.5rem; font-weight: 600;
+}
+
+.arch-contract pre {
+  font-family: 'SF Mono','Fira Code','Consolas',monospace;
+  font-size: 0.8rem; color: #2ecc71; margin: 0; line-height: 1.5;
+}
+
+.arch-text { font-size: 0.85rem; color: #999; line-height: 1.6; margin-bottom: 0.5rem; }
+.arch-text strong { color: #fff; }
+
+.arch-flow { margin: 1rem 0; overflow-x: auto; }
+
+.arch-flow-row {
+  display: flex; align-items: center; gap: 0.3rem;
+  padding: 1rem; min-width: 700px;
+}
+
+.arch-flow-box {
+  background: #14142a; border: 2px solid; border-radius: 8px;
+  padding: 0.8rem 1rem; text-align: center;
+  font-size: 0.85rem; color: #fff; font-weight: 600;
+  min-width: 100px;
+}
+
+.arch-flow-box small { display: block; font-size: 0.7rem; color: #888; font-weight: 400; margin-top: 0.2rem; }
+.arch-flow-arrow { color: #555; font-size: 1.2rem; flex-shrink: 0; }
+
+.arch-adapters { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+
+.arch-adapter {
+  background: #14142a; border-left: 3px solid;
+  padding: 0.6rem 1rem; border-radius: 0 6px 6px 0;
+  display: flex; align-items: center; gap: 1rem;
+  font-size: 0.85rem;
+}
+
+.arch-adapter strong { color: #fff; min-width: 160px; }
+.arch-adapter-flow { color: #aaa; }
+.arch-adapter-flow code { color: #3498db; font-size: 0.8rem; }
+
+.arch-benefits {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem; margin: 1rem 0;
+}
+
+.arch-benefit {
+  background: #14142a; border: 1px solid #1e1e32;
+  border-radius: 8px; padding: 1rem;
+  display: flex; gap: 0.8rem; align-items: flex-start;
+  font-size: 0.83rem; color: #aaa; line-height: 1.5;
+}
+
+.arch-benefit strong { color: #fff; display: block; margin-bottom: 0.2rem; }
+.arch-benefit-icon { font-size: 1.5rem; flex-shrink: 0; }
+
+.arch-without {
+  background: #1a0a0a; border: 1px solid #2a1a1a;
+  border-radius: 8px; padding: 1rem; margin: 1rem 0;
+}
+
+.arch-without-item {
+  padding: 0.4rem 0; font-size: 0.83rem; color: #bbb;
+  display: flex; align-items: flex-start; gap: 0.5rem;
+}
+
+.arch-without-item b { color: #e74c3c; }
+.arch-x { color: #e74c3c; font-weight: 700; font-size: 1rem; flex-shrink: 0; }
+
 @media (max-width: 768px) {
   .tab { padding: 0.7rem 1rem; font-size: 0.8rem; }
   .overview-cards { padding: 1rem; }
@@ -210,200 +384,7 @@ td { padding: 0.7rem 0.8rem; font-size: 0.85rem; }
 <div class="tab-bar" id="tab-bar"></div>
 <div id="content"></div>
 
-<script>
-var FACTORY_META = {
-  engine: { displayName: '엔진 공장', emoji: '🔧', color: '#e74c3c' },
-  tire:   { displayName: '타이어 공장', emoji: '🛞', color: '#3498db' },
-  battery:{ displayName: '배터리 공장', emoji: '🔋', color: '#2ecc71' }
-};
-
-var factories = [];
-var activeTab = 'all';
-
-// 이벤트 위임 — 따옴표 이스케이프 문제 회피
-document.getElementById('tab-bar').addEventListener('click', function(e) {
-  var tab = e.target.closest('[data-tab]');
-  if (tab) {
-    activeTab = tab.dataset.tab;
-    renderTabs();
-    renderContent();
-  }
-});
-
-function fetchData() {
-  fetch('/api/factories')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      factories = data;
-      renderTabs();
-      renderContent();
-    })
-    .catch(function(e) { console.error(e); });
-}
-
-function renderTabs() {
-  var bar = document.getElementById('tab-bar');
-  var totalIP = 0;
-  factories.forEach(function(f) { totalIP += (f.stats ? f.stats.inProgress : 0); });
-
-  var html = '<div class="tab' + (activeTab === 'all' ? ' active' : '') +
-    '" data-tab="all" style="border-bottom-color:' +
-    (activeTab === 'all' ? '#fff' : 'transparent') + '">📊 전체';
-  if (totalIP > 0) html += ' <span class="badge-count" style="background:#3498db30;color:#3498db">' + totalIP + '</span>';
-  html += '</div>';
-
-  factories.forEach(function(f) {
-    var a = activeTab === f.name;
-    var ip = f.stats ? f.stats.inProgress : 0;
-    html += '<div class="tab' + (a ? ' active' : '') +
-      '" data-tab="' + f.name +
-      '" style="border-bottom-color:' + (a ? f.color : 'transparent') + '">' +
-      f.emoji + ' ' + f.displayName;
-    if (ip > 0) html += ' <span class="badge-count" style="background:' + f.color + '30;color:' + f.color + '">' + ip + '</span>';
-    html += '</div>';
-  });
-
-  bar.innerHTML = html;
-}
-
-function renderContent() {
-  var el = document.getElementById('content');
-  if (activeTab === 'all') {
-    el.innerHTML = renderOverview();
-  } else {
-    var f = factories.find(function(x) { return x.name === activeTab; });
-    if (!f) { el.innerHTML = ''; return; }
-    el.innerHTML = renderFactory(f);
-  }
-}
-
-function renderOverview() {
-  var cards = '<div class="overview-cards">';
-  factories.forEach(function(f) {
-    var s = f.stats || { total:0, inProgress:0, completed:0 };
-    cards += '<div class="factory-card" data-tab="' + f.name + '" style="border-left-color:' + f.color + '">' +
-      '<div class="card-header"><div class="card-name">' + f.emoji + ' ' + f.displayName + '</div></div>' +
-      '<div class="card-stats">' +
-        '<span>전체 <span class="card-stat-num" style="color:#fff">' + s.total + '</span></span>' +
-        '<span>진행 <span class="card-stat-num" style="color:' + f.color + '">' + s.inProgress + '</span></span>' +
-        '<span>완료 <span class="card-stat-num" style="color:#2ecc71">' + s.completed + '</span></span>' +
-      '</div></div>';
-  });
-  cards += '</div>';
-
-  var allJobs = [];
-  factories.forEach(function(f) {
-    if (!f.jobs) return;
-    var m = FACTORY_META[f.name] || {};
-    f.jobs.forEach(function(j) {
-      var copy = {};
-      for (var k in j) copy[k] = j[k];
-      copy.factoryName = m.displayName || f.name;
-      copy.factoryEmoji = m.emoji || '';
-      copy.factoryColor = m.color || f.color;
-      allJobs.push(copy);
-    });
-  });
-
-  return cards + renderJobTable(allJobs, true);
-}
-
-function renderFactory(f) {
-  var s = f.stats || { total:0, inProgress:0, completed:0 };
-  var stats = '<div class="stats-bar">' +
-    '<div><div class="stat-value">' + s.total + '</div><div class="stat-label">전체 요청</div></div>' +
-    '<div><div class="stat-value" style="color:' + f.color + '">' + s.inProgress + '</div><div class="stat-label">진행 중</div></div>' +
-    '<div><div class="stat-value" style="color:#2ecc71">' + s.completed + '</div><div class="stat-label">완료</div></div>' +
-  '</div>';
-
-  var jobs = (f.jobs || []).map(function(j) {
-    var copy = {};
-    for (var k in j) copy[k] = j[k];
-    copy.factoryColor = f.color;
-    return copy;
-  });
-
-  return stats + '<main>' + renderJobTable(jobs, false) + '</main>';
-}
-
-function renderJobTable(jobs, showFactory) {
-  if (jobs.length === 0) {
-    return '<div class="empty-state"><div class="icon">📦</div><div class="text">생산 요청이 없습니다</div></div>';
-  }
-
-  var sorted = jobs.slice().sort(function(a, b) {
-    if (a.statusType === 'done' && b.statusType !== 'done') return 1;
-    if (a.statusType !== 'done' && b.statusType === 'done') return -1;
-    return new Date(b.startedAt) - new Date(a.startedAt);
-  });
-
-  var fth = showFactory ? '<th>공장</th>' : '';
-  var html = '<table><thead><tr>' + fth +
-    '<th>작업 ID</th><th>발주 번호</th><th>부품</th>' +
-    '<th style="text-align:center">수량</th><th>상태</th>' +
-    '<th>진행률</th><th>경과 시간</th><th>상세</th></tr></thead><tbody>';
-
-  sorted.forEach(function(job) {
-    var elapsed = formatElapsed(job.startedAt, job.completedAt);
-    var isDone = job.statusType === 'done';
-    var isWait = job.statusType === 'waiting';
-    var bc = isDone ? 'done' : (isWait ? 'waiting' : 'progress');
-    var c = job.factoryColor || '#3498db';
-
-    var ph;
-    if (job.progress < 0) {
-      ph = '<div class="progress-wrap"><div class="progress-bar">' +
-        '<div class="progress-fill indeterminate" style="background:' + c + '"></div>' +
-        '</div><span class="progress-pct">...</span></div>';
-    } else {
-      var fs = isDone ? 'background:linear-gradient(90deg,#2ecc71,#27ae60)' : 'background:' + c;
-      ph = '<div class="progress-wrap"><div class="progress-bar">' +
-        '<div class="progress-fill" style="width:' + job.progress + '%;' + fs + '"></div>' +
-        '</div><span class="progress-pct">' + job.progress + '%</span></div>';
-    }
-
-    var ftd = '';
-    if (showFactory) {
-      ftd = '<td><span class="factory-tag" style="background:' + c + '18;color:' + c + '">' +
-        (job.factoryEmoji||'') + ' ' + (job.factoryName||'') + '</span></td>';
-    }
-
-    html += '<tr>' + ftd +
-      '<td class="job-id" style="color:' + c + '">' + truncate(job.id, 16) + '</td>' +
-      '<td class="job-id" style="color:#888">' + truncate(job.purchaseOrderId, 14) + '</td>' +
-      '<td>' + (job.partId||'') + '</td>' +
-      '<td class="qty">' + (job.quantity||0) + '</td>' +
-      '<td><span class="badge ' + bc + '">' + (job.status||'') + '</span></td>' +
-      '<td>' + ph + '</td>' +
-      '<td class="elapsed ' + (isDone ? 'done' : 'active') + '">' + elapsed + '</td>' +
-      '<td class="detail">' + (job.detail||'') + '</td></tr>';
-  });
-
-  return html + '</tbody></table>';
-}
-
-function truncate(s, max) {
-  if (!s) return '-';
-  return s.length > max ? s.slice(0, max) + '...' : s;
-}
-
-function formatElapsed(startISO, endISO) {
-  if (!startISO) return '-';
-  var start = new Date(startISO);
-  var end = endISO ? new Date(endISO) : new Date();
-  var diff = Math.max(0, Math.floor((end - start) / 1000));
-  var min = Math.floor(diff / 60);
-  var sec = diff % 60;
-  if (min > 0) return min + '분 ' + sec + '초';
-  return sec + '초';
-}
-
-fetchData();
-setInterval(fetchData, 2000);
-setInterval(function() {
-  if (factories.some(function(f) { return f.stats && f.stats.inProgress > 0; })) renderContent();
-}, 1000);
-</script>
+<script src="/app.js"></script>
 </body>
 </html>`;
 }
