@@ -206,12 +206,12 @@ function renderPurchaseOrderRow(po) {
 // ─── 유틸 ───
 function statusBadge(status) {
   const map = {
-    RECEIVED: ['received', '접수됨'],
     PARTS_ALLOCATED: ['allocated', '부품 할당'],
     WAITING_PARTS: ['waiting', '부품 대기'],
     ASSEMBLING: ['allocated', '조립 중'],
     COMPLETED: ['completed', '완료'],
     ORDERED: ['ordered', '발주됨'],
+    PENDING: ['waiting', '발주 대기 (SNS 미연결)'],
     FAILED: ['failed', '실패'],
   };
   const [cls, label] = map[status] || ['', status];

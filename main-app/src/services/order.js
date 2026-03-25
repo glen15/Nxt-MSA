@@ -9,34 +9,29 @@ async function createOrder(vehicleModel) {
     throw new Error(`알 수 없는 차량 모델: ${vehicleModel}. sedan, ev, suv 중 선택하세요.`);
   }
 
+  // 재고 차감 시도
+  const { results, missingParts } = await deductAndCheck(vehicle.requiredParts);
+
   const now = new Date().toISOString();
+  const status = missingParts ? 'WAITING_PARTS' : 'PARTS_ALLOCATED';
   const order = {
     orderId: uuidv4(),
     vehicleModel,
     vehicleType: vehicle.type,
     requiredParts: vehicle.requiredParts,
-    status: 'RECEIVED',
+    status,
     createdAt: now,
     updatedAt: now,
   };
 
-  await ordersModel.create(order);
-  console.log(`[주문] 생성: ${order.orderId} (${vehicle.label})`);
-
-  // 재고 차감 시도
-  const { results, missingParts } = await deductAndCheck(vehicle.requiredParts);
-
   if (missingParts) {
-    await ordersModel.updateStatus(order.orderId, 'WAITING_PARTS', {
-      ':missingParts': missingParts,
-    });
-    console.log(`[주문] 부품 부족 — 대기: ${order.orderId}`, missingParts);
-    return { ...order, status: 'WAITING_PARTS', missingParts, stockResults: results };
+    order.missingParts = missingParts;
   }
 
-  await ordersModel.updateStatus(order.orderId, 'PARTS_ALLOCATED');
-  console.log(`[주문] 부품 할당 완료: ${order.orderId}`);
-  return { ...order, status: 'PARTS_ALLOCATED', stockResults: results };
+  await ordersModel.create(order);
+  console.log(`[주문] ${order.orderId} (${vehicle.label}) — ${status}`);
+
+  return { ...order, stockResults: results };
 }
 
 module.exports = { createOrder };

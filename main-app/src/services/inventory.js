@@ -1,4 +1,5 @@
 const partsModel = require('../models/parts');
+const config = require('../config');
 const { publishOrderingMessage } = require('./messaging');
 const { v4: uuidv4 } = require('uuid');
 const purchaseOrdersModel = require('../models/purchaseOrders');
@@ -19,11 +20,12 @@ async function checkAndOrder(partId) {
   }
 
   // 임계치 이하 → 발주 생성
+  const hasSns = !!config.sns.orderingTopicArn;
   const purchaseOrder = {
     purchaseOrderId: uuidv4(),
     partId,
     quantity: part.orderQuantity,
-    status: 'ORDERED',
+    status: hasSns ? 'ORDERED' : 'PENDING',
     orderedAt: new Date().toISOString(),
   };
 
