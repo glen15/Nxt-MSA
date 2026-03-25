@@ -45,6 +45,7 @@ app.use((err, req, res, next) => {
 
 app.listen(config.port, async () => {
   console.log(`\n🚗 NxtCar 메인 앱서버 (포트: ${config.port})`);
+  console.log(`   유저: ${config.userPrefix || '(미설정 — .env 파일 확인)'}`);
   console.log(`   리전: ${config.aws.region}\n`);
 
   // DynamoDB 테이블 연결 확인
@@ -60,12 +61,12 @@ app.listen(config.port, async () => {
     try {
       const res = await dynamo.send(new DescribeTableCommand({ TableName: t.name }));
       const count = res.Table.ItemCount;
-      console.log(`   ✅ ${t.label} — 연결됨 (${count}건)`);
+      console.log(`   ✅ ${t.name} — 연결됨 (${count}건)`);
     } catch (err) {
       if (err.name === 'ResourceNotFoundException') {
-        console.log(`   ❌ ${t.label} — 테이블 없음`);
+        console.log(`   ❌ ${t.name} — 테이블 없음`);
       } else {
-        console.log(`   ❌ ${t.label} — ${err.message}`);
+        console.log(`   ❌ ${t.name} — ${err.message}`);
       }
     }
   }
