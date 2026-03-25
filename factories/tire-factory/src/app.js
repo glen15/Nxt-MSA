@@ -2,6 +2,8 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { chaosMiddleware, chaosRouter } = require('../../shared/chaos');
 const { publishReceivingMessage } = require('../../shared/snsPublisher');
+const { upsertJob } = require('../../shared/db');
+const { createDashboard } = require('../../shared/dashboard');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -12,6 +14,36 @@ app.use('/admin', chaosRouter(express));
 
 // 진행 중인 제조 작업
 const manufacturingJobs = new Map();
+
+const phaseNames = {
+  MIXING_RUBBER: '고무 혼합', MOLDING: '성형',
+  VULCANIZING: '가황', QUALITY_CHECK: '품질 검사', DONE: '완료',
+};
+
+// DB에 정규화된 작업 저장
+function saveJob(j) {
+  upsertJob({
+    id: j.manufacturingId,
+    factory: 'tire',
+    purchaseOrderId: j.purchaseOrderId,
+    partId: j.partId,
+    quantity: j.quantity,
+    status: j.phase === 'DONE' ? '완료' : (phaseNames[j.phase] || j.phase),
+    statusType: j.phase === 'DONE' ? 'done' : 'progress',
+    progress: j.progress,
+    detail: phaseNames[j.phase] || j.phase,
+    startedAt: j.createdAt,
+    completedAt: j.completedAt || null,
+  });
+}
+
+// 대시보드 — 제조 현황 웹 페이지
+app.use(createDashboard(express, {
+  name: 'tire',
+  displayName: '타이어 공장',
+  emoji: '🛞',
+  color: '#3498db',
+}));
 
 // 헬스 체크 — 타이어 공장은 /api/health (같은 이름)
 app.get('/api/health', (req, res) => {
@@ -47,6 +79,7 @@ app.post('/api/manufacture', async (req, res) => {
   };
 
   manufacturingJobs.set(manufacturingId, job);
+  saveJob(job);
   console.log(`[타이어공장] 제조 시작: ${partId} × ${quantity} (${manufacturingId})`);
 
   // 비동기 생산 시뮬레이션 — 단계별 진행
@@ -60,6 +93,7 @@ app.post('/api/manufacture', async (req, res) => {
       job.phase = 'DONE';
       job.progress = 100;
       job.completedAt = new Date().toISOString();
+      saveJob(job);
       console.log(`[타이어공장] 제조 완료: ${partId} × ${quantity}`);
 
       try {
@@ -76,6 +110,7 @@ app.post('/api/manufacture', async (req, res) => {
     }
     job.phase = phases[phaseIndex];
     job.progress = Math.round((phaseIndex / (phases.length - 1)) * 100);
+    saveJob(job);
   }, 2000);
 
   // 202 Accepted

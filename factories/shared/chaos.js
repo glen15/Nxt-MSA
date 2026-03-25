@@ -2,8 +2,8 @@
 let chaosState = { enabled: false };
 
 function chaosMiddleware(req, res, next) {
-  // /admin 경로는 장애 영향 안 받음
-  if (req.path.startsWith('/admin')) return next();
+  // /admin, 대시보드 경로는 장애 영향 안 받음
+  if (req.path.startsWith('/admin') || req.path.startsWith('/dashboard') || req.path === '/') return next();
 
   if (!chaosState.enabled) return next();
 

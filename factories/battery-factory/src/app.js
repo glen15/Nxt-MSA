@@ -2,6 +2,8 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { chaosMiddleware, chaosRouter } = require('../../shared/chaos');
 const { publishReceivingMessage } = require('../../shared/snsPublisher');
+const { upsertJob } = require('../../shared/db');
+const { createDashboard } = require('../../shared/dashboard');
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -12,6 +14,39 @@ app.use('/admin', chaosRouter(express));
 
 // 주문 저장소
 const orderStore = new Map();
+
+const stateInfo = {
+  QUEUED: { name: '대기 중', progress: 0 },
+  CHARGING_CELLS: { name: '셀 충전 중', progress: 33 },
+  ASSEMBLING_PACK: { name: '팩 조립 중', progress: 66 },
+  SHIPPED: { name: '출하 완료', progress: 100 },
+};
+
+// DB에 정규화된 작업 저장
+function saveJob(j) {
+  const info = stateInfo[j.state] || { name: j.state, progress: 50 };
+  upsertJob({
+    id: j.orderNumber,
+    factory: 'battery',
+    purchaseOrderId: j.purchaseOrderId,
+    partId: j.partId,
+    quantity: j.quantity,
+    status: info.name,
+    statusType: j.state === 'SHIPPED' ? 'done' : (j.state === 'QUEUED' ? 'waiting' : 'progress'),
+    progress: info.progress,
+    detail: info.name,
+    startedAt: j.queuedAt,
+    completedAt: j.shippedAt || null,
+  });
+}
+
+// 대시보드 — 주문 현황 웹 페이지
+app.use(createDashboard(express, {
+  name: 'battery',
+  displayName: '배터리 공장',
+  emoji: '🔋',
+  color: '#2ecc71',
+}));
 
 // 헬스 체크 — 배터리 공장은 /api/ping (또 다른 이름 — 교육 포인트)
 app.get('/api/ping', (req, res) => {
@@ -44,6 +79,7 @@ app.post('/api/orders', async (req, res) => {
   };
 
   orderStore.set(orderNumber, order);
+  saveJob(order);
   console.log(`[배터리공장] 주문 접수: ${partId} × ${quantity} (${orderNumber})`);
 
   // 비동기 생산 — 배터리는 생산 시간이 김 (5~12초)
@@ -51,17 +87,20 @@ app.post('/api/orders', async (req, res) => {
 
   setTimeout(() => {
     order.state = 'CHARGING_CELLS';
+    saveJob(order);
     console.log(`[배터리공장] 셀 충전 중: ${orderNumber}`);
   }, delay * 0.3);
 
   setTimeout(() => {
     order.state = 'ASSEMBLING_PACK';
+    saveJob(order);
     console.log(`[배터리공장] 팩 조립 중: ${orderNumber}`);
   }, delay * 0.7);
 
   setTimeout(async () => {
     order.state = 'SHIPPED';
     order.shippedAt = new Date().toISOString();
+    saveJob(order);
     console.log(`[배터리공장] 출하 완료: ${partId} × ${quantity} (${Math.round(delay / 1000)}초)`);
 
     try {

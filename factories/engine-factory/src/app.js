@@ -2,6 +2,8 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { chaosMiddleware, chaosRouter } = require('../../shared/chaos');
 const { publishReceivingMessage } = require('../../shared/snsPublisher');
+const { upsertJob } = require('../../shared/db');
+const { createDashboard } = require('../../shared/dashboard');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -12,6 +14,31 @@ app.use('/admin', chaosRouter(express));
 
 // 진행 중인 생산 작업
 const jobs = new Map();
+
+// DB에 정규화된 작업 저장
+function saveJob(j) {
+  upsertJob({
+    id: j.jobId,
+    factory: 'engine',
+    purchaseOrderId: j.purchaseOrderId,
+    partId: j.partId,
+    quantity: j.quantity,
+    status: j.status === 'COMPLETED' ? '완료' : '생산 중',
+    statusType: j.status === 'COMPLETED' ? 'done' : 'progress',
+    progress: j.status === 'COMPLETED' ? 100 : -1,
+    detail: null,
+    startedAt: j.startedAt,
+    completedAt: j.completedAt || null,
+  });
+}
+
+// 대시보드 — 생산 현황 웹 페이지
+app.use(createDashboard(express, {
+  name: 'engine',
+  displayName: '엔진 공장',
+  emoji: '🔧',
+  color: '#e74c3c',
+}));
 
 // 헬스 체크 — 엔진 공장은 /api/health
 app.get('/api/health', (req, res) => {
@@ -38,6 +65,7 @@ app.post('/api/produce', async (req, res) => {
   };
 
   jobs.set(jobId, job);
+  saveJob(job);
   console.log(`[엔진공장] 생산 시작: ${partId} × ${quantity} (jobId: ${jobId})`);
 
   // 비동기 생산 시뮬레이션 (3~8초)
@@ -45,6 +73,7 @@ app.post('/api/produce', async (req, res) => {
   setTimeout(async () => {
     job.status = 'COMPLETED';
     job.completedAt = new Date().toISOString();
+    saveJob(job);
     console.log(`[엔진공장] 생산 완료: ${partId} × ${quantity} (${Math.round(delay / 1000)}초)`);
 
     try {

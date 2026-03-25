@@ -1,0 +1,53 @@
+services:
+  engine:
+    build: .
+    command: node engine-factory/src/app.js
+    ports:
+      - "3001:3001"
+    volumes:
+      - factory-data:/data
+    environment:
+      - FACTORY_DB_PATH=/data/factory.db
+      - RECEIVING_TOPIC_ARN=${RECEIVING_TOPIC_ARN:-}
+      - AWS_REGION=${AWS_REGION:-ap-northeast-2}
+    restart: unless-stopped
+
+  tire:
+    build: .
+    command: node tire-factory/src/app.js
+    ports:
+      - "3002:3002"
+    volumes:
+      - factory-data:/data
+    environment:
+      - FACTORY_DB_PATH=/data/factory.db
+      - RECEIVING_TOPIC_ARN=${RECEIVING_TOPIC_ARN:-}
+      - AWS_REGION=${AWS_REGION:-ap-northeast-2}
+    restart: unless-stopped
+
+  battery:
+    build: .
+    command: node battery-factory/src/app.js
+    ports:
+      - "3003:3003"
+    volumes:
+      - factory-data:/data
+    environment:
+      - FACTORY_DB_PATH=/data/factory.db
+      - RECEIVING_TOPIC_ARN=${RECEIVING_TOPIC_ARN:-}
+      - AWS_REGION=${AWS_REGION:-ap-northeast-2}
+    restart: unless-stopped
+
+  hub:
+    build: .
+    command: node hub/app.js
+    ports:
+      - "3000:3000"
+    volumes:
+      - factory-data:/data
+    environment:
+      - FACTORY_DB_PATH=/data/factory.db
+    restart: unless-stopped
+
+volumes:
+  factory-data:

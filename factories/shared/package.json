@@ -1,0 +1,9 @@
+{
+  "name": "nxt-msa-factory-shared",
+  "version": "1.0.0",
+  "description": "공장 서버 공통 모듈 (chaos, SNS publisher, DB, dashboard)",
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.700.0",
+    "better-sqlite3": "^11.0.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "nxt-msa-factory-hub",
+  "version": "1.0.0",
+  "description": "공장 통합 대시보드 (3개 공장 현황을 탭으로 조회)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

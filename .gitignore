@@ -5,5 +5,8 @@ node_modules/
 *.log
 .DS_Store
 dist/
+*.db
+*.db-wal
+*.db-shm
 coverage/
 .claude/settings.local.json
