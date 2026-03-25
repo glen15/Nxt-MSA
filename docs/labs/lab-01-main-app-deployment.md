@@ -207,32 +207,50 @@ curl http://localhost:3000/api/parts
 
 본인 `USER_PREFIX`를 접두사로 테이블 3개를 생성합니다.
 
-> 예: USER_PREFIX가 `kmucd1-03`이면 → `kmucd1-03-Parts`, `kmucd1-03-Orders`, `kmucd1-03-PurchaseOrders`
+> 예: USER_PREFIX가 `kmucd1-03`이면:
+> - `kmucd1-03-Parts`
+> - `kmucd1-03-Orders`
+> - `kmucd1-03-PurchaseOrders`
 
 ### 3-1. Parts 테이블
 
-1. AWS 콘솔 → DynamoDB → **테이블 만들기**
+1. AWS 콘솔 → **DynamoDB** → 왼쪽 메뉴 **테이블** → **테이블 만들기**
 2. 테이블 이름: `<USER_PREFIX>-Parts` (예: `kmucd1-03-Parts`)
-3. 파티션 키: `partId` (문자열)
-4. 테이블 설정: **설정 사용자 지정**
-5. 읽기/쓰기 용량 설정: **온디맨드**
-6. **테이블 만들기**
+3. 파티션 키: `partId` — 타입: **문자열**
+4. 정렬 키: 비워두기 (사용 안 함)
+5. 테이블 설정: **설정 사용자 지정** 선택
+6. 읽기/쓰기 용량 설정: **온디맨드** 선택
+7. 나머지 기본값 → **테이블 만들기**
+
+> 상태가 "생성 중"에서 **"활성"**으로 바뀔 때까지 기다려주세요 (약 10초).
 
 ### 3-2. Orders 테이블
 
-- 테이블 이름: `<USER_PREFIX>-Orders`
-- 파티션 키: `orderId` (문자열)
-- 온디맨드 모드
+같은 방법으로 두 번째 테이블을 만듭니다:
+
+1. **테이블 만들기** 클릭
+2. 테이블 이름: `<USER_PREFIX>-Orders` (예: `kmucd1-03-Orders`)
+3. 파티션 키: `orderId` — 타입: **문자열**
+4. 설정 사용자 지정 → **온디맨드**
+5. **테이블 만들기**
 
 ### 3-3. PurchaseOrders 테이블
 
-- 테이블 이름: `<USER_PREFIX>-PurchaseOrders`
-- 파티션 키: `purchaseOrderId` (문자열)
-- 온디맨드 모드
+세 번째 테이블:
 
-### 3-4. 서버 재시작으로 확인
+1. **테이블 만들기** 클릭
+2. 테이블 이름: `<USER_PREFIX>-PurchaseOrders` (예: `kmucd1-03-PurchaseOrders`)
+3. 파티션 키: `purchaseOrderId` — 타입: **문자열**
+4. 설정 사용자 지정 → **온디맨드**
+5. **테이블 만들기**
 
-서버를 `Ctrl+C`로 중지 후 다시 시작합니다:
+### 3-4. 테이블 확인
+
+DynamoDB 콘솔 왼쪽 메뉴 → **테이블**에서 본인 접두사로 시작하는 테이블 3개가 모두 **"활성"** 상태인지 확인합니다.
+
+### 3-5. 서버 재시작으로 확인
+
+Cloud9 터미널에서 서버를 `Ctrl+C`로 중지 후 다시 시작합니다:
 
 ```bash
 npm start
@@ -246,7 +264,9 @@ npm start
    ✅ kmucd1-03-PurchaseOrders — 연결됨 (0건)
 ```
 
-❌가 ✅로 바뀌었지만 아직 데이터가 0건입니다.
+❌가 ✅로 바뀌었습니다! 하지만 아직 데이터가 0건입니다.
+
+> 🤔 **생각해보기**: 테이블은 만들어졌는데 왜 프론트엔드에 부품이 안 보이는가? 테이블이 비어있기 때문이다.
 
 ---
 
@@ -254,11 +274,14 @@ npm start
 
 Parts 테이블에 초기 재고 데이터 3건을 입력합니다.
 
-### 방법 A: AWS 콘솔에서 수동 입력
+### 4-1. 콘솔에서 항목 추가
 
-DynamoDB 콘솔 → `<USER_PREFIX>-Parts` 테이블 → **항목 탐색** → **항목 만들기** → **JSON 보기** 켜기
+1. DynamoDB 콘솔 → `<USER_PREFIX>-Parts` 테이블 클릭
+2. **항목 탐색** 탭 → **항목 만들기**
+3. 오른쪽 상단 **JSON 보기** 토글 켜기
+4. 아래 JSON을 붙여넣고 **항목 만들기** 클릭
 
-**ENGINE-V6 (V6 엔진)**
+**① ENGINE-V6 (V6 엔진)**
 ```json
 {
   "partId": {"S": "ENGINE-V6"},
@@ -271,7 +294,13 @@ DynamoDB 콘솔 → `<USER_PREFIX>-Parts` 테이블 → **항목 탐색** → **
 }
 ```
 
-**TIRE-R18 (R18 타이어)**
+> ⚠️ DynamoDB JSON 형식에 주의하세요.
+> `"currentStock": 50`이 아니라 `"currentStock": {"N": "50"}`입니다.
+> `{"S": "..."}` = 문자열, `{"N": "..."}` = 숫자 (값은 문자열로 감싸야 함)
+
+5. 다시 **항목 만들기** → JSON 보기 → 붙여넣기:
+
+**② TIRE-R18 (R18 타이어)**
 ```json
 {
   "partId": {"S": "TIRE-R18"},
@@ -284,7 +313,9 @@ DynamoDB 콘솔 → `<USER_PREFIX>-Parts` 테이블 → **항목 탐색** → **
 }
 ```
 
-**BATTERY-72KWH (72kWh 배터리)**
+6. 다시 **항목 만들기** → JSON 보기 → 붙여넣기:
+
+**③ BATTERY-72KWH (72kWh 배터리)**
 ```json
 {
   "partId": {"S": "BATTERY-72KWH"},
@@ -297,36 +328,19 @@ DynamoDB 콘솔 → `<USER_PREFIX>-Parts` 테이블 → **항목 탐색** → **
 }
 ```
 
-### 방법 B: CLI로 한 번에 입력
+### 4-2. 항목 확인
 
-> `<USER_PREFIX>`를 본인 값으로 바꿔서 실행하세요.
+**항목 탐색** 탭에서 3개 항목이 보이는지 확인합니다:
 
-```bash
-PREFIX=kmucd1-03
+| partId | partName | currentStock | threshold | orderQuantity |
+|--------|----------|:------------:|:---------:|:-------------:|
+| ENGINE-V6 | V6 엔진 | 50 | 20 | 100 |
+| TIRE-R18 | R18 타이어 | 200 | 80 | 400 |
+| BATTERY-72KWH | 72kWh 배터리 | 30 | 10 | 50 |
 
-aws dynamodb put-item --table-name ${PREFIX}-Parts --item '{
-  "partId":{"S":"ENGINE-V6"},"partName":{"S":"V6 엔진"},
-  "category":{"S":"engine"},"currentStock":{"N":"50"},
-  "threshold":{"N":"20"},"orderQuantity":{"N":"100"},
-  "updatedAt":{"S":"2026-03-26T00:00:00Z"}
-}' --region us-east-1
+### 4-3. API로 데이터 확인
 
-aws dynamodb put-item --table-name ${PREFIX}-Parts --item '{
-  "partId":{"S":"TIRE-R18"},"partName":{"S":"R18 타이어"},
-  "category":{"S":"tire"},"currentStock":{"N":"200"},
-  "threshold":{"N":"80"},"orderQuantity":{"N":"400"},
-  "updatedAt":{"S":"2026-03-26T00:00:00Z"}
-}' --region us-east-1
-
-aws dynamodb put-item --table-name ${PREFIX}-Parts --item '{
-  "partId":{"S":"BATTERY-72KWH"},"partName":{"S":"72kWh 배터리"},
-  "category":{"S":"battery"},"currentStock":{"N":"30"},
-  "threshold":{"N":"10"},"orderQuantity":{"N":"50"},
-  "updatedAt":{"S":"2026-03-26T00:00:00Z"}
-}' --region us-east-1
-```
-
-### 4-1. API로 데이터 확인
+Cloud9 터미널에서:
 
 ```bash
 curl http://localhost:3000/api/parts | jq
@@ -342,6 +356,11 @@ curl http://localhost:3000/api/parts | jq
   ]
 }
 ```
+
+> 💡 **부품별 의미:**
+> - `currentStock`: 현재 재고 수량
+> - `threshold`: 이 수치 이하로 떨어지면 자동 발주 트리거
+> - `orderQuantity`: 발주 시 요청하는 수량
 
 ---
 
