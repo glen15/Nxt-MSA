@@ -12,14 +12,14 @@ provider "aws" {
   region = var.aws_region
 }
 
-# 최신 Amazon Linux 2023 AMI
+# 최신 Amazon Linux 2023 AMI (ARM/Graviton)
 data "aws_ami" "al2023" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    values = ["al2023-ami-*-arm64"]
   }
 
   filter {
@@ -55,24 +55,16 @@ resource "aws_security_group" "factory" {
   }
 
   ingress {
-    description = "Engine Factory"
+    description = "Factory Hub Dashboard"
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = var.allowed_cidrs
+  }
+
+  ingress {
+    description = "Factory Servers (3001-3003)"
     from_port   = 3001
-    to_port     = 3001
-    protocol    = "tcp"
-    cidr_blocks = var.allowed_cidrs
-  }
-
-  ingress {
-    description = "Tire Factory"
-    from_port   = 3002
-    to_port     = 3002
-    protocol    = "tcp"
-    cidr_blocks = var.allowed_cidrs
-  }
-
-  ingress {
-    description = "Battery Factory"
-    from_port   = 3003
     to_port     = 3003
     protocol    = "tcp"
     cidr_blocks = var.allowed_cidrs
@@ -127,7 +119,7 @@ resource "aws_iam_instance_profile" "factory" {
   role = aws_iam_role.factory.name
 }
 
-# EC2 인스턴스 — 공장 서버 3개 (포트 3001/3002/3003)
+# EC2 인스턴스 — 공장 서버 (Docker Compose로 4개 컨테이너 실행)
 resource "aws_instance" "factory" {
   ami                    = data.aws_ami.al2023.id
   instance_type          = var.instance_type
@@ -135,6 +127,19 @@ resource "aws_instance" "factory" {
   vpc_security_group_ids = [aws_security_group.factory.id]
   iam_instance_profile   = aws_iam_instance_profile.factory.name
   subnet_id              = data.aws_subnets.default.ids[0]
+
+  # IMDSv2 필수 (AL2023 기본 동작과 일치)
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+  }
+
+  # Docker build 시 메모리 여유를 위해 20GB
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+  }
 
   user_data = base64encode(templatefile("${path.module}/userdata.sh", {
     receiving_topic_arn = var.receiving_topic_arn

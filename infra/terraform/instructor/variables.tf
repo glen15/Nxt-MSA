@@ -16,9 +16,9 @@ variable "allowed_cidrs" {
 }
 
 variable "instance_type" {
-  description = "EC2 인스턴스 타입"
+  description = "EC2 인스턴스 타입 (ARM Graviton)"
   type        = string
-  default     = "t3.micro"
+  default     = "t4g.small"
 }
 
 variable "receiving_topic_arn" {

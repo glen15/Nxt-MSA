@@ -1,84 +1,48 @@
 #!/bin/bash
 set -euo pipefail
+exec > /var/log/userdata.log 2>&1
+echo "=== 배포 시작: $(date) ==="
 
-# Node.js 20 설치
-dnf install -y nodejs20 git
+echo "=== [1/5] Swap 설정 (t3.micro 메모리 보완) ==="
+dd if=/dev/zero of=/swapfile bs=1M count=1024
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
 
-# 앱 디렉토리 생성
-mkdir -p /opt/nxt-msa
-cd /opt/nxt-msa
+echo "=== [2/5] Docker 설치 ==="
+dnf install -y docker git
+systemctl enable --now docker
+usermod -aG docker ec2-user
 
-# 소스 코드 복사 (git clone or S3 다운로드로 변경 가능)
-cat > /opt/nxt-msa/download.sh << 'SCRIPT'
-#!/bin/bash
-# TODO: git clone 또는 S3에서 factories/ 코드 다운로드
-echo "소스 코드를 /opt/nxt-msa/factories 에 배치하세요"
-SCRIPT
-chmod +x /opt/nxt-msa/download.sh
+# Docker Compose plugin
+mkdir -p /usr/local/lib/docker/cli-plugins
+ARCH=$(uname -m)
+curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$${ARCH}" \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
-# 환경변수 설정
-cat > /opt/nxt-msa/.env << ENV
+echo "=== [3/5] 소스 코드 다운로드 ==="
+git clone https://github.com/glen15/Nxt-MSA.git /opt/nxt-msa
+
+echo "=== [4/5] 환경변수 설정 ==="
+cat > /opt/nxt-msa/factories/.env << 'ENVEOF'
 AWS_REGION=${aws_region}
 RECEIVING_TOPIC_ARN=${receiving_topic_arn}
-ENV
+ENVEOF
 
-# systemd 서비스 — 엔진 공장 (:3001)
-cat > /etc/systemd/system/engine-factory.service << 'SERVICE'
-[Unit]
-Description=Engine Factory Server
-After=network.target
+echo "=== [5/5] Docker Compose 빌드 및 실행 ==="
+cd /opt/nxt-msa/factories
+docker compose up -d --build
 
-[Service]
-Type=simple
-WorkingDirectory=/opt/nxt-msa/factories/engine-factory
-EnvironmentFile=/opt/nxt-msa/.env
-Environment=PORT=3001
-ExecStart=/usr/bin/node src/app.js
-Restart=always
-RestartSec=5
+# IMDSv2 토큰으로 퍼블릭 IP 조회
+TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $${TOKEN}" \
+  http://169.254.169.254/latest/meta-data/public-ipv4)
 
-[Install]
-WantedBy=multi-user.target
-SERVICE
-
-# systemd 서비스 — 타이어 공장 (:3002)
-cat > /etc/systemd/system/tire-factory.service << 'SERVICE'
-[Unit]
-Description=Tire Factory Server
-After=network.target
-
-[Service]
-Type=simple
-WorkingDirectory=/opt/nxt-msa/factories/tire-factory
-EnvironmentFile=/opt/nxt-msa/.env
-Environment=PORT=3002
-ExecStart=/usr/bin/node src/app.js
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-SERVICE
-
-# systemd 서비스 — 배터리 공장 (:3003)
-cat > /etc/systemd/system/battery-factory.service << 'SERVICE'
-[Unit]
-Description=Battery Factory Server
-After=network.target
-
-[Service]
-Type=simple
-WorkingDirectory=/opt/nxt-msa/factories/battery-factory
-EnvironmentFile=/opt/nxt-msa/.env
-Environment=PORT=3003
-ExecStart=/usr/bin/node src/app.js
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-SERVICE
-
-systemctl daemon-reload
-# 서비스 시작은 코드 배치 후 수동으로
-# systemctl enable --now engine-factory tire-factory battery-factory
+echo "=== 배포 완료: $(date) ==="
+echo "통합 대시보드: http://$${PUBLIC_IP}:3000"
+echo "엔진 공장:     http://$${PUBLIC_IP}:3001"
+echo "타이어 공장:   http://$${PUBLIC_IP}:3002"
+echo "배터리 공장:   http://$${PUBLIC_IP}:3003"

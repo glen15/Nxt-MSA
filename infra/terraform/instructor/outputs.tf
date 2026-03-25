@@ -8,6 +8,11 @@ output "factory_public_dns" {
   value       = aws_instance.factory.public_dns
 }
 
+output "hub_dashboard_url" {
+  description = "공장 통합 대시보드 URL"
+  value       = "http://${aws_instance.factory.public_ip}:3000"
+}
+
 output "engine_factory_url" {
   description = "엔진 공장 URL"
   value       = "http://${aws_instance.factory.public_ip}:3001"
