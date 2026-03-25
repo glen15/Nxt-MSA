@@ -1,4 +1,3 @@
-const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const config = require('./config');
@@ -12,21 +11,29 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 프론트엔드 정적 파일 서빙 (빌드 결과물 또는 소스)
-app.use(express.static(path.join(__dirname, '../../frontend/dist')));
-app.use(express.static(path.join(__dirname, '../../frontend')));
-
 // 라우트
 app.use('/api/parts', partsRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/purchase-orders', purchaseOrdersRouter);
+
+// API 루트
+app.get('/', (req, res) => {
+  res.json({
+    service: 'NxtCar API',
+    endpoints: {
+      health: 'GET /api/health',
+      parts: 'GET /api/parts',
+      orders: 'GET /api/orders | POST /api/orders',
+      purchaseOrders: 'GET /api/purchase-orders',
+    },
+  });
+});
 
 // 헬스 체크
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'running',
     timestamp: new Date().toISOString(),
-    factories: config.factories,
   });
 });
 
