@@ -11,7 +11,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 프론트엔드 정적 파일 서빙 (로컬 개발용)
+// 프론트엔드 정적 파일 서빙 (빌드 결과물 또는 소스)
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
 app.use(express.static(path.join(__dirname, '../../frontend')));
 
 // 라우트

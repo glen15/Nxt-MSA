@@ -1,0 +1,13 @@
+{
+  "name": "nxt-msa-frontend",
+  "version": "1.0.0",
+  "description": "차량 조립 공장 부품 재고 관리 — 프론트엔드",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

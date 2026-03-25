@@ -182,3 +182,6 @@ function showToast(message, type = 'info') {
   container.appendChild(toast);
   setTimeout(() => toast.remove(), 4000);
 }
+
+// HTML onclick에서 호출하기 위해 글로벌 등록
+window.createOrder = createOrder;
