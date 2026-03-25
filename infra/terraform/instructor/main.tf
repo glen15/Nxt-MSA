@@ -125,7 +125,7 @@ resource "aws_iam_instance_profile" "factory" {
   role = aws_iam_role.factory.name
 }
 
-# EC2 인스턴스 — 공장 서버 (Docker Compose로 4개 컨테이너 실행)
+# EC2 인스턴스 — 공장 서버 4개 (엔진/타이어/배터리/허브 대시보드)
 resource "aws_instance" "factory" {
   ami                    = data.aws_ami.al2023.id
   instance_type          = var.instance_type
@@ -142,7 +142,6 @@ resource "aws_instance" "factory" {
     http_put_response_hop_limit = 2
   }
 
-  # Docker build 시 메모리 여유를 위해 20GB
   root_block_device {
     volume_size = 30
     volume_type = "gp3"
