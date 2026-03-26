@@ -33,12 +33,33 @@ header h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
 .status-badge.disconnected { background: #fc8181; color: white; }
 
 main {
-  max-width: 1000px;
+  max-width: 1400px;
   margin: 2rem auto;
   padding: 0 1rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.top-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 768px) {
+  .top-row { grid-template-columns: 1fr; }
+  .dashboard-grid { grid-template-columns: 1fr; }
 }
 
 .card {
@@ -118,7 +139,12 @@ main {
 .vehicle-parts { color: #718096; font-size: 0.8rem; }
 
 /* 주문/발주 목록 */
-.orders-list, .purchase-orders-list { overflow-x: auto; }
+.orders-list, .purchase-orders-list, .receiving-list { overflow-x: auto; }
+
+.dashboard-grid table { font-size: 0.8rem; }
+.dashboard-grid th, .dashboard-grid td { padding: 0.4rem 0.5rem; }
+.dashboard-grid .card { max-height: 500px; overflow-y: auto; }
+.dashboard-grid .card h2 { font-size: 1rem; position: sticky; top: 0; background: white; padding-bottom: 0.5rem; z-index: 1; }
 
 table {
   width: 100%;

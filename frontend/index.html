@@ -14,64 +14,70 @@
   </header>
 
   <main>
-    <!-- 재고 현황 -->
-    <section class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h2>📦 부품 재고 현황</h2>
-        <button class="reset-btn" onclick="resetStock()">🔄 재고 초기화</button>
-      </div>
-      <div id="parts-grid" class="parts-grid">
-        <div class="loading">로딩 중...</div>
-      </div>
-    </section>
-
-    <!-- 주문 생성 -->
-    <section class="card">
-      <h2>🛒 차량 주문</h2>
-      <div class="order-form">
-        <div class="vehicle-options">
-          <button class="vehicle-btn" data-model="sedan" onclick="createOrder('sedan')">
-            <span class="vehicle-icon">🚗</span>
-            <span class="vehicle-name">세단 (내연기관)</span>
-            <span class="vehicle-parts">엔진×1 + 타이어×4</span>
-          </button>
-          <button class="vehicle-btn" data-model="ev" onclick="createOrder('ev')">
-            <span class="vehicle-icon">⚡</span>
-            <span class="vehicle-name">전기차</span>
-            <span class="vehicle-parts">배터리×2 + 타이어×4</span>
-          </button>
-          <button class="vehicle-btn" data-model="suv" onclick="createOrder('suv')">
-            <span class="vehicle-icon">🚙</span>
-            <span class="vehicle-name">SUV (하이브리드)</span>
-            <span class="vehicle-parts">엔진×1 + 타이어×4 + 배터리×1</span>
-          </button>
+    <!-- 상단: 재고 + 주문 -->
+    <div class="top-row">
+      <!-- 재고 현황 -->
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h2>📦 부품 재고 현황</h2>
+          <button class="reset-btn" onclick="resetStock()">🔄 재고 초기화</button>
         </div>
-      </div>
-    </section>
+        <div id="parts-grid" class="parts-grid">
+          <div class="loading">로딩 중...</div>
+        </div>
+      </section>
 
-    <!-- 주문 목록 -->
-    <section class="card">
-      <h2>📋 주문 목록</h2>
-      <div id="orders-list" class="orders-list">
-        <div class="loading">로딩 중...</div>
-      </div>
-    </section>
+      <!-- 주문 생성 -->
+      <section class="card">
+        <h2>🛒 차량 주문</h2>
+        <div class="order-form">
+          <div class="vehicle-options">
+            <button class="vehicle-btn" data-model="sedan" onclick="createOrder('sedan')">
+              <span class="vehicle-icon">🚗</span>
+              <span class="vehicle-name">세단 (내연기관)</span>
+              <span class="vehicle-parts">엔진×1 + 타이어×4</span>
+            </button>
+            <button class="vehicle-btn" data-model="ev" onclick="createOrder('ev')">
+              <span class="vehicle-icon">⚡</span>
+              <span class="vehicle-name">전기차</span>
+              <span class="vehicle-parts">배터리×2 + 타이어×4</span>
+            </button>
+            <button class="vehicle-btn" data-model="suv" onclick="createOrder('suv')">
+              <span class="vehicle-icon">🚙</span>
+              <span class="vehicle-name">SUV (하이브리드)</span>
+              <span class="vehicle-parts">엔진×1 + 타이어×4 + 배터리×1</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
 
-    <!-- 발주 현황 -->
-    <section class="card">
-      <h2>🏭 발주 현황</h2>
-      <div id="purchase-orders-list" class="purchase-orders-list">
-        <div class="loading">로딩 중...</div>
-      </div>
-    </section>
+    <!-- 하단: 3열 대시보드 -->
+    <div class="dashboard-grid">
+      <!-- 주문 목록 -->
+      <section class="card">
+        <h2>📋 주문 목록</h2>
+        <div id="orders-list" class="orders-list">
+          <div class="loading">로딩 중...</div>
+        </div>
+      </section>
 
-    <!-- 최근 입고 -->
-    <section class="card">
-      <h2>📥 최근 입고</h2>
-      <div id="receiving-list" class="receiving-list">
-        <div class="loading">로딩 중...</div>
-      </div>
-    </section>
+      <!-- 발주 현황 -->
+      <section class="card">
+        <h2>🏭 발주 현황</h2>
+        <div id="purchase-orders-list" class="purchase-orders-list">
+          <div class="loading">로딩 중...</div>
+        </div>
+      </section>
+
+      <!-- 최근 입고 -->
+      <section class="card">
+        <h2>📥 최근 입고</h2>
+        <div id="receiving-list" class="receiving-list">
+          <div class="loading">로딩 중...</div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <footer>
