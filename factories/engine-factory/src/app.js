@@ -2,7 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { chaosMiddleware, chaosRouter } = require('../../shared/chaos');
 const { publishReceivingMessage } = require('../../shared/snsPublisher');
-const { upsertJob } = require('../../shared/db');
+const { upsertJob, existsByPurchaseOrderId } = require('../../shared/db');
 const { createDashboard } = require('../../shared/dashboard');
 
 const app = express();
@@ -53,6 +53,11 @@ app.post('/api/produce', async (req, res) => {
 
   if (!purchaseOrderId || !partId || !quantity) {
     return res.status(400).json({ error: 'purchaseOrderId, partId, quantity 필수' });
+  }
+
+  if (existsByPurchaseOrderId(purchaseOrderId, 'engine')) {
+    console.log(`[엔진공장] 중복 요청 무시: ${purchaseOrderId}`);
+    return setTimeout(() => res.status(202).json({ message: '이미 처리된 발주입니다.', duplicate: true }), 4000);
   }
 
   const jobId = uuidv4();

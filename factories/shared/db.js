@@ -85,4 +85,9 @@ function getAllStats() {
   return { total: row.total, inProgress: row.inProgress, completed: row.completed };
 }
 
-module.exports = { db, upsertJob, getJobsByFactory, getAllJobs, getStatsByFactory, getAllStats };
+function existsByPurchaseOrderId(purchaseOrderId, factory) {
+  const row = db.prepare('SELECT 1 FROM jobs WHERE purchaseOrderId = ? AND factory = ? LIMIT 1').get(purchaseOrderId, factory);
+  return !!row;
+}
+
+module.exports = { db, upsertJob, getJobsByFactory, getAllJobs, getStatsByFactory, getAllStats, existsByPurchaseOrderId };

@@ -2,7 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { chaosMiddleware, chaosRouter } = require('../../shared/chaos');
 const { publishReceivingMessage } = require('../../shared/snsPublisher');
-const { upsertJob } = require('../../shared/db');
+const { upsertJob, existsByPurchaseOrderId } = require('../../shared/db');
 const { createDashboard } = require('../../shared/dashboard');
 
 const app = express();
@@ -67,6 +67,11 @@ app.post('/api/orders', async (req, res) => {
         ...(!quantity ? [{ field: 'quantity', message: '필수 항목입니다' }] : []),
       ],
     });
+  }
+
+  if (existsByPurchaseOrderId(purchaseOrderId, 'battery')) {
+    console.log(`[배터리공장] 중복 요청 무시: ${purchaseOrderId}`);
+    return setTimeout(() => res.status(200).json({ message: '이미 처리된 발주입니다.', duplicate: true }), 4000);
   }
 
   const orderNumber = `BAT-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;

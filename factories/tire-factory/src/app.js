@@ -2,7 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { chaosMiddleware, chaosRouter } = require('../../shared/chaos');
 const { publishReceivingMessage } = require('../../shared/snsPublisher');
-const { upsertJob } = require('../../shared/db');
+const { upsertJob, existsByPurchaseOrderId } = require('../../shared/db');
 const { createDashboard } = require('../../shared/dashboard');
 
 const app = express();
@@ -66,6 +66,11 @@ app.post('/api/manufacture', async (req, res) => {
       code: 'INVALID_REQUEST',
       message: 'purchaseOrderId, partId, quantity가 필요합니다.',
     });
+  }
+
+  if (existsByPurchaseOrderId(purchaseOrderId, 'tire')) {
+    console.log(`[타이어공장] 중복 요청 무시: ${purchaseOrderId}`);
+    return setTimeout(() => res.status(202).json({ message: '이미 처리된 발주입니다.', duplicate: true }), 4000);
   }
 
   const manufacturingId = `MFG-${uuidv4().slice(0, 8).toUpperCase()}`;
