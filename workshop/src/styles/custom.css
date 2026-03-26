@@ -1,0 +1,4 @@
+/* 페이지 이동 시 최상단으로 스크롤 */
+html {
+  scroll-behavior: auto;
+}

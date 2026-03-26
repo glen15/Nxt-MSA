@@ -528,5 +528,3 @@ aws dynamodb describe-table --table-name <USER_PREFIX>-Parts --region us-east-1
 
 ---
 
-## 다음
-→ Lab 02: 공장 서버 탐험 — 강사의 공장 API에 curl로 요청 보내기

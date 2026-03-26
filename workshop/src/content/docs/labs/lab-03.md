@@ -383,5 +383,3 @@ aws sns publish --topic-arn <ORDERING_TOPIC_ARN> --message "test" --region us-ea
 
 ---
 
-## 다음
-→ [Lab 04: Lambda 커넥터 — SQS에서 공장까지](lab-04-lambda-connector.md)

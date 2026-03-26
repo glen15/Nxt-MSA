@@ -6,6 +6,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'NxtCar MSA Workshop',
+			customCss: ['./src/styles/custom.css'],
 			defaultLocale: 'root',
 			locales: { root: { label: '한국어', lang: 'ko' } },
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/glen15/Nxt-MSA' }],
