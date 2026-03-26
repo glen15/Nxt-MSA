@@ -50,7 +50,7 @@ async function updateConnectionStatus() {
 }
 
 async function refreshAll() {
-  await Promise.all([loadParts(), loadOrders(), loadPurchaseOrders()]);
+  await Promise.all([loadParts(), loadOrders(), loadPurchaseOrders(), loadReceiving()]);
   await updateConnectionStatus();
 }
 
@@ -214,6 +214,44 @@ function renderPurchaseOrderRow(po) {
   `;
 }
 
+// ─── 최근 입고 ───
+async function loadReceiving() {
+  const container = document.getElementById('receiving-list');
+  try {
+    const { purchaseOrders } = await apiGet('/api/purchase-orders');
+    const received = purchaseOrders
+      .filter(po => po.status === 'RECEIVED')
+      .sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
+
+    if (!received.length) {
+      container.innerHTML = '<div class="empty">입고 내역이 없습니다.</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <table>
+        <thead><tr><th>부품</th><th>수량</th><th>공장</th><th>입고 시각</th></tr></thead>
+        <tbody>${received.slice(0, 20).map(renderReceivingRow).join('')}</tbody>
+      </table>
+    `;
+  } catch {
+    container.innerHTML = '<div class="empty">입고 데이터를 불러올 수 없습니다.</div>';
+  }
+}
+
+function renderReceivingRow(po) {
+  const time = po.receivedAt ? new Date(po.receivedAt).toLocaleTimeString('ko-KR') : '-';
+  const factoryLabels = { 'engine-factory': '🔧 엔진', 'tire-factory': '🛞 타이어', 'battery-factory': '🔋 배터리' };
+  return `
+    <tr>
+      <td>${partLabel(po.partId)}</td>
+      <td><strong>+${po.receivedQuantity || po.quantity}</strong></td>
+      <td>${factoryLabels[po.factoryId] || po.factoryId || '-'}</td>
+      <td>${time}</td>
+    </tr>
+  `;
+}
+
 // ─── 페이지네이션 ───
 function renderPagination(current, total, type) {
   const prev = current > 1 ? `<button onclick="changePage('${type}', ${current - 1})">◀ 이전</button>` : '';
@@ -236,6 +274,7 @@ function statusBadge(status) {
     ASSEMBLING: ['allocated', '조립 중'],
     COMPLETED: ['completed', '완료'],
     ORDERED: ['ordered', '발주됨'],
+    RECEIVED: ['completed', '입고 완료'],
     PENDING: ['waiting', '발주 대기 (SNS 미연결)'],
     FAILED: ['failed', '실패'],
   };
