@@ -11,17 +11,27 @@ router.get('/vehicle-models', (req, res) => {
 
 // 전체 주문 조회
 router.get('/', async (req, res) => {
-  const orders = await ordersModel.getAll();
-  res.json({ orders });
+  try {
+    const orders = await ordersModel.getAll();
+    res.json({ orders });
+  } catch (err) {
+    console.error('[주문 조회 실패]', err.message);
+    res.status(500).json({ error: '주문 데이터를 불러올 수 없습니다.', detail: err.message });
+  }
 });
 
 // 특정 주문 조회
 router.get('/:orderId', async (req, res) => {
-  const order = await ordersModel.getById(req.params.orderId);
-  if (!order) {
-    return res.status(404).json({ error: '주문을 찾을 수 없습니다.' });
+  try {
+    const order = await ordersModel.getById(req.params.orderId);
+    if (!order) {
+      return res.status(404).json({ error: '주문을 찾을 수 없습니다.' });
+    }
+    res.json({ order });
+  } catch (err) {
+    console.error('[주문 조회 실패]', err.message);
+    res.status(500).json({ error: '주문 조회 실패', detail: err.message });
   }
-  res.json({ order });
 });
 
 // 주문 생성
