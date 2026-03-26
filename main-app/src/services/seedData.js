@@ -6,7 +6,7 @@ const INITIAL_PARTS = [
     category: 'engine',
     currentStock: 10,
     threshold: 5,
-    orderQuantity: 20,
+    orderQuantity: 5,
   },
   {
     partId: 'TIRE-R18',
@@ -14,7 +14,7 @@ const INITIAL_PARTS = [
     category: 'tire',
     currentStock: 40,
     threshold: 20,
-    orderQuantity: 80,
+    orderQuantity: 20,
   },
   {
     partId: 'BATTERY-72KWH',
@@ -22,7 +22,7 @@ const INITIAL_PARTS = [
     category: 'battery',
     currentStock: 8,
     threshold: 3,
-    orderQuantity: 10,
+    orderQuantity: 5,
   },
 ];
 
