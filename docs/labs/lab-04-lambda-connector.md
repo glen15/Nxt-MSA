@@ -87,7 +87,7 @@ exports.handler = async (event) => {
     const snsEnvelope = JSON.parse(record.body);
     const message = JSON.parse(snsEnvelope.Message);
 
-    const { category, purchaseOrderId, partId, quantity } = message;
+    const { category, purchaseOrderId, partId, quantity, requester, callbackTopicArn } = message;
     const factory = FACTORIES[category];
 
     if (!factory) {
@@ -102,6 +102,8 @@ exports.handler = async (event) => {
         purchaseOrderId,
         partId,
         quantity,
+        requester,
+        callbackTopicArn,
       });
 
       console.log(`[발주→${factory.label}] 요청 성공:`, response);
