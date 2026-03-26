@@ -104,7 +104,7 @@ async function createOrder(vehicleModel) {
     if (status === 201) {
       showToast(`주문 완료! (${data.orderId.slice(0, 8)}...)`, 'success');
     } else if (status === 202) {
-      showToast(`부품 대기 중... (${data.orderId.slice(0, 8)}...)`, 'info');
+      showToast(`⚠️ 재고 부족 — 부품 입고 대기 중 (${data.orderId.slice(0, 8)}...)`, 'error');
     } else {
       showToast(`주문 생성: ${data.orderId?.slice(0, 8) || '확인'}`, 'success');
     }
