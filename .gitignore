@@ -10,3 +10,8 @@ dist/
 *.db-shm
 coverage/
 .claude/settings.local.json
+workshop/node_modules/
+workshop/dist/
+workshop/infra/.terraform/
+workshop/infra/terraform.tfstate*
+workshop/infra/.terraform.lock.hcl

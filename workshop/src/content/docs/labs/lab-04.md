@@ -1,0 +1,487 @@
+---
+title: "Lab 04: Lambda 커넥터"
+---
+
+
+## 목표
+SQS 큐에 쌓인 발주 메시지를 Lambda가 꺼내서 공장 API를 호출하는
+**발주 경로의 마지막 구간**을 완성한다.
+
+## 사전 준비
+- Lab 03 완료 (SNS 토픽 + SQS 큐 3개 + 구독 설정)
+- 강사가 안내한 **공장 서버 IP**
+- 강사가 안내한 Lambda 역할: `Nxt-msa-lambda-role`
+
+## 전체 흐름
+
+```
+Step 1  Lambda 함수 생성              → 코드 붙여넣기
+Step 2  SQS 트리거 연결               → 3개 큐를 Lambda에 연결
+Step 3  테스트 (환경변수 없이)          → 로그 확인 + 실패 → 재시도 관찰
+Step 4  공장 URL 환경변수 추가         → Lambda가 공장에 도달할 수 있게
+Step 5  전체 발주 경로 확인            → 주문 → 공장 대시보드에서 생산 확인
+```
+
+---
+
+## Step 1: Lambda 함수 생성 (15분)
+
+### Lambda란?
+
+서버를 관리하지 않고 **코드만 올리면** AWS가 알아서 실행해주는 서비스입니다.
+SQS에 메시지가 들어오면 Lambda가 자동으로 깨어나서 코드를 실행합니다.
+
+```
+SQS에 메시지 도착 → Lambda 자동 실행 → 코드가 메시지를 처리 → 종료
+```
+
+사용한 시간만큼만 과금됩니다. 메시지가 없으면 비용도 0원입니다.
+
+### 1-1. 함수 생성
+
+1. AWS 콘솔 → **Lambda** → **함수 생성**
+2. **새로 작성** 선택
+3. 함수 이름: `<USER_PREFIX>-order-lambda` (예: `kmucd1-00-order-lambda`)
+4. 런타임: **Node.js 20.x**
+5. 아키텍처: **x86_64**
+6. **기본 실행 역할 변경** → **기존 역할 사용** → `Nxt-msa-lambda-role` 선택
+7. **함수 생성**
+
+### 1-2. 코드 입력
+
+함수 생성 후 **코드** 탭 → `index.mjs` 파일을 클릭합니다.
+
+> ⚠️ 기본 파일이 `index.mjs`로 되어 있습니다. 우리 코드는 `index.js`(CommonJS)이므로
+> **파일 이름을 바꾸거나**, 런타임 설정에서 핸들러를 변경해야 합니다.
+
+**방법: 파일 이름 변경**
+1. `index.mjs` 파일을 우클릭 → **삭제**
+2. **파일** → **새 파일** → 이름: `index.js`
+3. 아래 코드를 전체 붙여넣기:
+
+```javascript
+// Lab용 통합 발주 Lambda — SQS 메시지의 category로 공장을 라우팅
+// 미션: 이 Lambda를 부품별 개별 Lambda(order-engine, order-tire, order-battery)로 분리하세요
+const http = require('http');
+
+const FACTORIES = {
+  engine: {
+    url: process.env.ENGINE_FACTORY_URL || 'http://localhost:3001',
+    path: '/api/produce',
+    label: '엔진',
+  },
+  tire: {
+    url: process.env.TIRE_FACTORY_URL || 'http://localhost:3002',
+    path: '/api/manufacture',
+    label: '타이어',
+  },
+  battery: {
+    url: process.env.BATTERY_FACTORY_URL || 'http://localhost:3003',
+    path: '/api/orders',
+    label: '배터리',
+  },
+};
+
+exports.handler = async (event) => {
+  const results = [];
+
+  for (const record of event.Records) {
+    // SQS → SNS wrapping 해제
+    const snsEnvelope = JSON.parse(record.body);
+    const message = JSON.parse(snsEnvelope.Message);
+
+    const { category, purchaseOrderId, partId, quantity } = message;
+    const factory = FACTORIES[category];
+
+    if (!factory) {
+      console.error(`[발주] 알 수 없는 카테고리: ${category}`);
+      continue;
+    }
+
+    console.log(`[발주→${factory.label}] 메시지 수신:`, JSON.stringify(message));
+
+    try {
+      const response = await callFactory(`${factory.url}${factory.path}`, {
+        purchaseOrderId,
+        partId,
+        quantity,
+      });
+
+      console.log(`[발주→${factory.label}] 요청 성공:`, response);
+      results.push({ messageId: record.messageId, status: 'success', response });
+    } catch (err) {
+      console.error(`[발주→${factory.label}] 요청 실패:`, err.message);
+      throw err;
+    }
+  }
+
+  return { processed: results.length, results };
+};
+
+function callFactory(url, body) {
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url);
+    const data = JSON.stringify(body);
+
+    const req = http.request(
+      {
+        hostname: urlObj.hostname,
+        port: urlObj.port,
+        path: urlObj.pathname,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': data.length },
+        timeout: 25000,
+      },
+      (res) => {
+        let responseData = '';
+        res.on('data', (chunk) => (responseData += chunk));
+        res.on('end', () => {
+          if (res.statusCode >= 400) {
+            reject(new Error(`HTTP ${res.statusCode}: ${responseData}`));
+          } else {
+            resolve(JSON.parse(responseData));
+          }
+        });
+      }
+    );
+
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('요청 타임아웃'));
+    });
+    req.write(data);
+    req.end();
+  });
+}
+```
+
+4. **Deploy** 클릭 (Ctrl+Shift+U)
+
+---
+
+## Step 2: SQS 트리거 연결 (10분)
+
+Lambda가 SQS 큐에서 자동으로 메시지를 가져오도록 **트리거**를 연결합니다.
+
+### 2-1. 엔진 큐 트리거
+
+1. Lambda 함수 페이지 → **트리거 추가**
+2. 소스: **SQS**
+3. SQS 대기열: `<USER_PREFIX>-engine-order` 선택
+4. 배치 크기: **1** (기본값 10 → **반드시 1로 변경**)
+5. **추가**
+
+> ⚠️ 배치 크기가 10이면 메시지 10개가 한꺼번에 Lambda에 전달됩니다.
+> 이 중 하나라도 실패하면 **10개 전부 재시도**됩니다. 1로 설정하세요.
+
+### 2-2. 타이어 큐 트리거
+
+같은 방법으로:
+- SQS 대기열: `<USER_PREFIX>-tire-order`
+- 배치 크기: 1
+
+### 2-3. 배터리 큐 트리거
+
+같은 방법으로:
+- SQS 대기열: `<USER_PREFIX>-battery-order`
+- 배치 크기: 1
+
+### 2-4. 트리거 확인
+
+Lambda 함수 페이지 상단의 **다이어그램**에서 SQS 3개가 연결된 것을 확인합니다:
+
+```
+SQS: engine-order  ──┐
+SQS: tire-order    ──┼──→ Lambda: order-all
+SQS: battery-order ──┘
+```
+
+---
+
+## Step 3: 테스트 — 환경변수 없이 (20분)
+
+지금 Lambda에는 공장 URL 환경변수가 없습니다.
+코드에서 `http://localhost:3001` 같은 기본값을 사용하게 되는데,
+Lambda 내부에는 localhost 서버가 없으므로 **반드시 실패**합니다.
+
+하지만 **메시지는 정상적으로 수신**됩니다. 이 과정을 관찰합니다.
+
+### 3-1. 발주 메시지 발생시키기
+
+1. 프론트엔드에서 **재고 초기화**
+2. **전기차(EV)** 3번 주문 → 배터리 임계치 이하 → 발주 발생
+3. NxtCar 서버 로그에 `[SNS] 발주 메시지 발행` 확인
+
+### 3-2. CloudWatch 로그 확인
+
+1. AWS 콘솔 → **CloudWatch** → 왼쪽 메뉴 **로그 그룹**
+2. `/aws/lambda/<USER_PREFIX>-order-all` 클릭
+3. 가장 최근 **로그 스트림** 클릭
+
+**예상 로그:**
+```
+[발주→배터리] 메시지 수신: {"purchaseOrderId":"uuid-...","partId":"BATTERY-72KWH","quantity":10,"category":"battery"}
+[발주→배터리] 요청 실패: connect ECONNREFUSED 127.0.0.1:3003
+```
+
+> ✅ **메시지 수신은 성공!** SQS에서 메시지를 꺼내고, SNS 래핑을 벗기고, category를 파악하는 것까지 동작합니다.
+>
+> ❌ **공장 호출은 실패.** `localhost:3003`에 연결하려 했지만 Lambda 내부에는 서버가 없습니다.
+
+### 3-3. SQS 메시지 라이프사이클 이해
+
+SQS 메시지가 소비되고 삭제되는 과정을 이해합니다.
+
+```
+① 메시지 대기 중 (Visible)
+   SQS 큐에 메시지가 있음. Lambda가 가져갈 수 있는 상태.
+         │
+         ▼
+② Lambda가 메시지를 가져감 (In Flight)
+   메시지가 큐에서 "숨김" 처리됨 (Visibility Timeout, 기본 30초)
+   이 동안 다른 소비자는 이 메시지를 볼 수 없음.
+         │
+    ┌────┴────┐
+    ▼         ▼
+③-A 성공    ③-B 실패
+ Lambda가    Lambda가 에러를
+ 정상 반환   던짐 (throw err)
+    │         │
+    ▼         ▼
+④-A 삭제    ④-B 복귀
+ SQS가       30초 후 메시지가
+ 메시지를    다시 큐에 나타남
+ 영구 삭제   → ①로 돌아감
+```
+
+> 🛒 **비유: 당근마켓**
+> 1. 물건이 "판매 중"으로 올라옴 → **① 메시지 대기 중**
+> 2. 누군가 "구매할게요" → 상태가 **"거래 중"**으로 바뀌고 다른 사람에게 안 보임 → **② In Flight**
+> 3. 거래 성사 → 글이 **삭제**됨 → **④-A 성공**
+> 4. 거래 취소 → 다시 **"판매 중"**으로 노출 → **④-B 복귀**
+>
+> Visibility Timeout은 "거래 중" 상태가 유지되는 시간(기본 30초)입니다.
+> 이 시간 안에 Lambda가 처리를 끝내지 못하면, 메시지는 다시 "판매 중"으로 돌아가서
+> 다른 Lambda 인스턴스가 가져갈 수 있게 됩니다.
+
+SQS 콘솔에서 이 과정을 관찰할 수 있습니다:
+
+| SQS 지표 | Lambda 실행 중 (②) | 실패 후 대기 | 다시 실행 (②) |
+|---------|:-:|:-:|:-:|
+| 사용 가능한 메시지 | 0 | 1 | 0 |
+| 처리 중인 메시지 | 1 | 0 | 1 |
+
+> 💡 **핵심**: Lambda가 성공해야만 SQS가 메시지를 삭제합니다.
+> 실패하면 메시지는 사라지지 않고, 복귀 → 재시도를 반복합니다.
+
+### 3-4. 재시도 관찰
+
+CloudWatch 로그에 같은 메시지가 **반복해서** 나타나는 것을 확인하세요.
+
+```
+[발주→배터리] 메시지 수신: {...}      ← 1차 시도
+[발주→배터리] 요청 실패: ECONNREFUSED
+                                      ← 30초 대기 (visibility timeout)
+[발주→배터리] 메시지 수신: {...}      ← 2차 시도 (같은 메시지)
+[발주→배터리] 요청 실패: ECONNREFUSED
+...
+```
+
+> 🤔 **생각해보기**: 공장이 다운되어도 메시지가 사라지지 않습니다.
+> SQS가 메시지를 보관하고 있다가 Lambda에게 계속 재시도시킵니다.
+> 공장이 복구되면 (= 올바른 URL을 넣으면) 쌓여있던 메시지가 자동으로 처리됩니다.
+> 이것이 **느슨한 결합의 장점**입니다.
+
+---
+
+## Step 4: 공장 URL 환경변수 추가 (10분)
+
+이제 Lambda에게 실제 공장 주소를 알려줍니다.
+
+### 4-1. 환경변수 설정
+
+1. Lambda 함수 → **구성** 탭 → **환경 변수** → **편집**
+2. 3개 환경변수 추가:
+
+| 키 | 값 |
+|---|---|
+| `ENGINE_FACTORY_URL` | `http://<공장IP>:3001` |
+| `TIRE_FACTORY_URL` | `http://<공장IP>:3002` |
+| `BATTERY_FACTORY_URL` | `http://<공장IP>:3003` |
+
+> 공장 IP는 강사가 안내한 주소를 사용하세요.
+
+3. **저장**
+
+### 4-2. 쌓인 메시지 자동 처리
+
+환경변수를 저장하는 순간, Lambda가 업데이트됩니다.
+SQS에 쌓여있던 메시지들이 **자동으로 재처리**되기 시작합니다.
+
+CloudWatch 로그를 새로고침하면:
+
+```
+[발주→배터리] 메시지 수신: {"purchaseOrderId":"uuid-...","partId":"BATTERY-72KWH","quantity":10,"category":"battery"}
+[발주→배터리] 요청 실패: Task timed out after 3.00 seconds
+```
+
+> ❌ **또 실패?** 이번에는 `ECONNREFUSED`가 아니라 **타임아웃**입니다.
+> 공장 URL은 맞는데, 공장 API 응답이 3~8초 걸리고 Lambda 기본 타임아웃이 **3초**입니다.
+
+### 4-3. 타임아웃 해결
+
+1. Lambda 함수 → **구성** 탭 → **일반 구성** → **편집**
+2. 타임아웃: **30초**로 변경
+3. **저장**
+
+CloudWatch 로그를 다시 확인하면:
+
+```
+[발주→배터리] 메시지 수신: {"purchaseOrderId":"uuid-...","partId":"BATTERY-72KWH","quantity":10,"category":"battery"}
+[발주→배터리] 요청 성공: {"orderNumber":"...","accepted":true}
+```
+
+> **요청 실패**가 **요청 성공**으로 바뀌었습니다!
+>
+> 💡 Lambda 타임아웃은 호출하는 API의 응답 시간보다 넉넉하게 설정해야 합니다.
+> 기본 3초는 빠른 API에는 충분하지만, 생산 시뮬레이션처럼 시간이 걸리는 작업에는 부족합니다.
+
+---
+
+## Step 5: 전체 발주 경로 확인 (30분)
+
+### 5-1. 공장 허브 대시보드 확인
+
+브라우저에서 공장 허브에 접속합니다:
+
+```
+http://<공장IP>:3000
+```
+
+아까 실패-재시도하던 메시지가 성공 처리되면서 공장에서 **생산이 시작**된 것이 보입니다.
+
+### 5-2. 새 주문으로 전체 흐름 테스트
+
+1. 프론트엔드에서 **재고 초기화**
+2. **세단** 여러 번 주문 → 엔진 임계치(5) 이하로 떨어뜨리기
+
+**전체 흐름 확인:**
+
+```
+NxtCar 주문
+  ↓ 재고 차감 + 임계치 체크
+  ↓ 발주 생성 (status: ORDERED)
+NxtCar → SNS (ordering)
+  ↓ 필터 정책
+SQS (engine-order)
+  ↓ 이벤트 소스 매핑
+Lambda (order-all)
+  ↓ category로 라우팅
+엔진 공장 (:3001) POST /api/produce
+  ↓ 생산 시작!
+공장 허브 대시보드에서 확인
+```
+
+**확인 포인트:**
+- NxtCar 서버 로그: `[SNS] 발주 메시지 발행: ENGINE-V6 × 20`
+- CloudWatch 로그: `[발주→엔진] 요청 성공`
+- 공장 허브: 엔진 공장에 생산 작업 표시
+- 엔진 공장 대시보드 (`:3001`): 진행률 바가 움직임
+
+### 5-3. 전기차 + SUV도 테스트
+
+다양한 차량을 주문하여 3개 공장 모두 발주가 가는지 확인합니다:
+
+| 차량 | 부품 | 공장 |
+|------|------|------|
+| 세단 | 엔진 + 타이어 | 엔진 공장 + 타이어 공장 |
+| 전기차 | 배터리 + 타이어 | 배터리 공장 + 타이어 공장 |
+| SUV | 엔진 + 타이어 + 배터리 | 3개 공장 모두 |
+
+SUV를 여러 번 주문해서 3개 부품 모두 임계치 이하로 떨어뜨리면,
+**3개 공장에 동시에 발주**가 가는 것을 확인할 수 있습니다.
+
+---
+
+## 핵심 확인 포인트
+
+| # | 확인 항목 | 상태 |
+|---|----------|------|
+| 1 | Lambda 함수 생성 + 코드 Deploy | ☐ |
+| 2 | SQS 트리거 3개 연결 | ☐ |
+| 3 | CloudWatch에서 메시지 수신 로그 확인 | ☐ |
+| 4 | 환경변수 없이 실패 + 재시도 관찰 | ☐ |
+| 5 | 공장 URL 환경변수 추가 후 성공 | ☐ |
+| 6 | 공장 허브 대시보드에서 생산 작업 확인 | ☐ |
+| 7 | 다양한 차량 주문 → 해당 공장에 발주 도달 | ☐ |
+
+---
+
+## 교육 포인트 정리
+
+### 이 Lab에서 배운 것
+1. **Lambda 기본**: 함수 생성, 코드 배포, 타임아웃, 환경변수
+2. **이벤트 소스 매핑**: SQS → Lambda 자동 트리거
+3. **SNS 래핑 해제**: SQS 메시지 안의 SNS 봉투를 벗기는 패턴
+4. **실패와 재시도**: Lambda 실패 시 SQS가 메시지를 보존하고 재시도
+5. **어댑터 패턴**: 하나의 Lambda가 category에 따라 다른 공장 API를 호출
+
+### 현재 상태
+
+```
+NxtCar → SNS → SQS → Lambda → 공장 API ✅ 발주 경로 완성!
+
+공장 생산 완료 → ??? → 재고 충전 ❌ 아직 없음
+```
+
+발주까지는 동작하지만, 공장에서 생산이 완료되어도 **재고가 충전되지 않습니다**.
+공장 → NxtCar로 돌아오는 **입고 경로**가 아직 없기 때문입니다.
+
+### 아직 안 된 것 (다음 Lab에서 해결)
+- ❌ 공장 생산 완료 → 재고 충전 (입고 경로)
+- ❌ 발주 상태 ORDERED → RECEIVED 업데이트
+
+### 미션 예고
+
+이번 Lab에서 만든 `order-all` Lambda는 **하나의 함수가 3개 공장을 모두 처리**합니다.
+코드 안에 `FACTORIES` 맵과 category 라우팅 로직이 있습니다.
+
+미션에서는 이것을 **공장별 개별 Lambda 3개**로 분리합니다:
+- `order-engine` → 엔진 공장만 담당
+- `order-tire` → 타이어 공장만 담당
+- `order-battery` → 배터리 공장만 담당
+
+각 Lambda는 자기 공장의 URL과 API 경로만 알면 됩니다.
+코드는 `lambdas/` 디렉토리에 준비되어 있습니다.
+
+---
+
+## 트러블슈팅
+
+### Lambda에 SQS 트리거 추가 시 권한 에러
+→ Lambda 역할에 SQS 권한(`sqs:ReceiveMessage`, `sqs:DeleteMessage`, `sqs:GetQueueAttributes`)이 필요합니다.
+→ `Nxt-msa-lambda-role`을 사용하고 있는지 확인하세요.
+
+### CloudWatch 로그가 안 보임
+→ Lambda 역할에 CloudWatch Logs 권한이 필요합니다.
+→ Lambda가 실제로 실행되었는지 SQS 콘솔에서 메시지 수를 확인하세요.
+→ 로그 그룹 이름은 `/aws/lambda/<함수이름>`입니다.
+
+### `index.mjs` 관련 에러 (`require is not defined`)
+→ `.mjs`는 ES 모듈이라 `require()`를 쓸 수 없습니다.
+→ 파일 이름을 `index.js`로 변경하세요.
+
+### 환경변수 추가 후에도 실패
+→ 공장 IP가 정확한지 확인. `http://`를 포함해야 합니다.
+→ 포트가 맞는지 확인 (엔진 3001, 타이어 3002, 배터리 3003).
+→ Lambda가 공장 서버에 접근 가능한지 확인 (공장 보안그룹에 Lambda IP 대역 허용).
+
+### 공장 보안그룹
+→ Lambda는 VPC 밖에서 실행되므로 **퍼블릭 인터넷으로** 공장에 접근합니다.
+→ 공장 EC2 보안그룹에 포트 3001-3003이 `0.0.0.0/0`에서 열려있어야 합니다.
+
+---
+
+## 다음
+→ [Lab 05: 입고 경로 — 생산 완료에서 재고 충전까지](lab-05-receiving-path.md)
