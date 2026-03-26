@@ -115,12 +115,14 @@ app.post('/api/orders', async (req, res) => {
     }
   }, delay);
 
-  // 200 OK — 배터리 공장은 200으로 응답 (또 다른 차이점)
-  res.status(200).json({
-    orderNumber,
-    accepted: true,
-    estimatedMinutes: Math.round(delay / 60000 * 10) / 10,
-  });
+  // 200 OK — 접수 확인에 4초 소요 (Lambda 타임아웃 교육용)
+  setTimeout(() => {
+    res.status(200).json({
+      orderNumber,
+      accepted: true,
+      estimatedMinutes: Math.round(delay / 60000 * 10) / 10,
+    });
+  }, 4000);
 });
 
 // 주문 상태 조회 — POST /api/orders/status (GET이 아닌 POST — 교육 포인트)

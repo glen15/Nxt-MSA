@@ -113,13 +113,15 @@ app.post('/api/manufacture', async (req, res) => {
     saveJob(job);
   }, 2000);
 
-  // 202 Accepted
-  res.status(202).json({
-    manufacturingId,
-    status: 'ACCEPTED',
-    message: `타이어 ${quantity}개 제조가 시작되었습니다.`,
-    trackUrl: `/api/jobs/${manufacturingId}`,
-  });
+  // 202 Accepted — 접수 확인에 4초 소요 (Lambda 타임아웃 교육용)
+  setTimeout(() => {
+    res.status(202).json({
+      manufacturingId,
+      status: 'ACCEPTED',
+      message: `타이어 ${quantity}개 제조가 시작되었습니다.`,
+      trackUrl: `/api/jobs/${manufacturingId}`,
+    });
+  }, 4000);
 });
 
 // 제조 상태 조회 — GET /api/jobs/:manufacturingId

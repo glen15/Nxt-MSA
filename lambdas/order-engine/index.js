@@ -1,5 +1,5 @@
 // SQS(엔진큐) → 엔진 공장 API 호출 Lambda
-const https = require('http');
+const http = require('http');
 
 const ENGINE_FACTORY_URL = process.env.ENGINE_FACTORY_URL || 'http://localhost:3001';
 
@@ -7,7 +7,9 @@ exports.handler = async (event) => {
   const results = [];
 
   for (const record of event.Records) {
-    const message = JSON.parse(record.body);
+    // SQS → SNS wrapping 해제
+    const snsEnvelope = JSON.parse(record.body);
+    const message = JSON.parse(snsEnvelope.Message);
     console.log('[발주→엔진] 메시지 수신:', JSON.stringify(message));
 
     try {
@@ -33,7 +35,7 @@ function callFactory(url, body) {
     const urlObj = new URL(url);
     const data = JSON.stringify(body);
 
-    const req = https.request(
+    const req = http.request(
       {
         hostname: urlObj.hostname,
         port: urlObj.port,

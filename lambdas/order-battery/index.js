@@ -8,7 +8,9 @@ exports.handler = async (event) => {
   const results = [];
 
   for (const record of event.Records) {
-    const message = JSON.parse(record.body);
+    // SQS → SNS wrapping 해제
+    const snsEnvelope = JSON.parse(record.body);
+    const message = JSON.parse(snsEnvelope.Message);
     console.log('[발주→배터리] 메시지 수신:', JSON.stringify(message));
 
     try {

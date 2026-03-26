@@ -88,12 +88,14 @@ app.post('/api/produce', async (req, res) => {
     }
   }, delay);
 
-  // 202 Accepted — 비동기 처리 시작됨
-  res.status(202).json({
-    jobId,
-    message: '엔진 생산이 시작되었습니다.',
-    estimatedSeconds: Math.round(delay / 1000),
-  });
+  // 202 Accepted — 접수 확인에 4초 소요 (Lambda 타임아웃 교육용)
+  setTimeout(() => {
+    res.status(202).json({
+      jobId,
+      message: '엔진 생산이 시작되었습니다.',
+      estimatedSeconds: Math.round(delay / 1000),
+    });
+  }, 4000);
 });
 
 // 생산 상태 조회 — GET /api/status/:jobId
