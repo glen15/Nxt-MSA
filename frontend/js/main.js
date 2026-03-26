@@ -32,6 +32,9 @@ async function checkHealth() {
 document.addEventListener('DOMContentLoaded', init);
 
 let refreshInterval;
+let ordersPage = 1;
+let purchaseOrdersPage = 1;
+const PAGE_SIZE = 20;
 
 async function init() {
   await updateConnectionStatus();
@@ -139,11 +142,15 @@ async function loadOrders() {
       return;
     }
     const sorted = orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+    ordersPage = Math.min(ordersPage, totalPages);
+    const paged = sorted.slice((ordersPage - 1) * PAGE_SIZE, ordersPage * PAGE_SIZE);
     container.innerHTML = `
       <table>
         <thead><tr><th>주문 ID</th><th>차량</th><th>타입</th><th>상태</th><th>시간</th></tr></thead>
-        <tbody>${sorted.map(renderOrderRow).join('')}</tbody>
+        <tbody>${paged.map(renderOrderRow).join('')}</tbody>
       </table>
+      ${totalPages > 1 ? renderPagination(ordersPage, totalPages, 'orders') : ''}
     `;
   } catch {
     container.innerHTML = '<div class="empty">주문 데이터를 불러올 수 없습니다.</div>';
@@ -177,11 +184,15 @@ async function loadPurchaseOrders() {
       return;
     }
     const sorted = purchaseOrders.sort((a, b) => new Date(b.orderedAt) - new Date(a.orderedAt));
+    const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+    purchaseOrdersPage = Math.min(purchaseOrdersPage, totalPages);
+    const paged = sorted.slice((purchaseOrdersPage - 1) * PAGE_SIZE, purchaseOrdersPage * PAGE_SIZE);
     container.innerHTML = `
       <table>
         <thead><tr><th>발주 ID</th><th>부품</th><th>수량</th><th>상태</th><th>시간</th></tr></thead>
-        <tbody>${sorted.map(renderPurchaseOrderRow).join('')}</tbody>
+        <tbody>${paged.map(renderPurchaseOrderRow).join('')}</tbody>
       </table>
+      ${totalPages > 1 ? renderPagination(purchaseOrdersPage, totalPages, 'purchaseOrders') : ''}
     `;
   } catch {
     container.innerHTML = '<div class="empty">발주 데이터를 불러올 수 없습니다.</div>';
@@ -202,6 +213,20 @@ function renderPurchaseOrderRow(po) {
     </tr>
   `;
 }
+
+// ─── 페이지네이션 ───
+function renderPagination(current, total, type) {
+  const prev = current > 1 ? `<button onclick="changePage('${type}', ${current - 1})">◀ 이전</button>` : '';
+  const next = current < total ? `<button onclick="changePage('${type}', ${current + 1})">다음 ▶</button>` : '';
+  return `<div class="pagination">${prev} <span>${current} / ${total}</span> ${next}</div>`;
+}
+
+function changePage(type, page) {
+  if (type === 'orders') { ordersPage = page; loadOrders(); }
+  else { purchaseOrdersPage = page; loadPurchaseOrders(); }
+}
+
+window.changePage = changePage;
 
 // ─── 유틸 ───
 function statusBadge(status) {

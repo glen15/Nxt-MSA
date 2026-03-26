@@ -195,3 +195,26 @@ footer {
   color: #a0aec0;
   font-size: 0.85rem;
 }
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.8rem;
+  font-size: 0.85rem;
+  color: #718096;
+}
+
+.pagination button {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.pagination button:hover {
+  background: #edf2f7;
+}
