@@ -119,7 +119,7 @@ function renderJobTable(jobs, showFactory) {
 
   var fth = showFactory ? '<th>공장</th>' : '';
   var html = '<table><thead><tr>' + fth +
-    '<th>작업 ID</th><th>발주 번호</th><th>부품</th>' +
+    '<th>요청자</th><th>작업 ID</th><th>발주 번호</th><th>부품</th>' +
     '<th style="text-align:center">수량</th><th>상태</th>' +
     '<th>진행률</th><th>경과 시간</th><th>상세</th></tr></thead><tbody>';
 
@@ -149,6 +149,7 @@ function renderJobTable(jobs, showFactory) {
     }
 
     html += '<tr>' + ftd +
+      '<td><strong>' + (job.requester || '-') + '</strong></td>' +
       '<td class="job-id" style="color:' + c + '">' + truncate(job.id, 16) + '</td>' +
       '<td class="job-id" style="color:#888">' + truncate(job.purchaseOrderId, 14) + '</td>' +
       '<td>' + (job.partId||'') + '</td>' +

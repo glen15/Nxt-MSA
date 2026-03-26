@@ -32,6 +32,7 @@ function saveJob(j) {
     statusType: j.phase === 'DONE' ? 'done' : 'progress',
     progress: j.progress,
     detail: phaseNames[j.phase] || j.phase,
+    requester: j.requester,
     startedAt: j.createdAt,
     completedAt: j.completedAt || null,
   });
@@ -58,7 +59,7 @@ app.get('/api/health', (req, res) => {
 // 생산 요청 — POST /api/manufacture
 // 타이어 공장의 고유 API (엔진 공장과 다른 엔드포인트명)
 app.post('/api/manufacture', async (req, res) => {
-  const { purchaseOrderId, partId, quantity } = req.body;
+  const { purchaseOrderId, partId, quantity, requester } = req.body;
 
   if (!purchaseOrderId || !partId || !quantity) {
     return res.status(400).json({
@@ -73,6 +74,7 @@ app.post('/api/manufacture', async (req, res) => {
     purchaseOrderId,
     partId,
     quantity,
+    requester,
     phase: 'MIXING_RUBBER',
     progress: 0,
     createdAt: new Date().toISOString(),

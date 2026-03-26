@@ -35,6 +35,7 @@ function saveJob(j) {
     statusType: j.state === 'SHIPPED' ? 'done' : (j.state === 'QUEUED' ? 'waiting' : 'progress'),
     progress: info.progress,
     detail: info.name,
+    requester: j.requester,
     startedAt: j.queuedAt,
     completedAt: j.shippedAt || null,
   });
@@ -56,7 +57,7 @@ app.get('/api/ping', (req, res) => {
 // 생산 요청 — POST /api/orders
 // 배터리 공장의 고유 API (주문 접수 스타일)
 app.post('/api/orders', async (req, res) => {
-  const { purchaseOrderId, partId, quantity } = req.body;
+  const { purchaseOrderId, partId, quantity, requester } = req.body;
 
   if (!purchaseOrderId || !partId || !quantity) {
     return res.status(422).json({
@@ -74,6 +75,7 @@ app.post('/api/orders', async (req, res) => {
     purchaseOrderId,
     partId,
     quantity,
+    requester,
     state: 'QUEUED',
     queuedAt: new Date().toISOString(),
   };

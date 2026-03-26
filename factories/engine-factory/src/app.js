@@ -27,6 +27,7 @@ function saveJob(j) {
     statusType: j.status === 'COMPLETED' ? 'done' : 'progress',
     progress: j.status === 'COMPLETED' ? 100 : -1,
     detail: null,
+    requester: j.requester,
     startedAt: j.startedAt,
     completedAt: j.completedAt || null,
   });
@@ -48,7 +49,7 @@ app.get('/api/health', (req, res) => {
 // 생산 요청 — POST /api/produce
 // 엔진 공장의 고유 API (다른 공장과 의도적으로 다름)
 app.post('/api/produce', async (req, res) => {
-  const { purchaseOrderId, partId, quantity } = req.body;
+  const { purchaseOrderId, partId, quantity, requester } = req.body;
 
   if (!purchaseOrderId || !partId || !quantity) {
     return res.status(400).json({ error: 'purchaseOrderId, partId, quantity 필수' });
@@ -60,6 +61,7 @@ app.post('/api/produce', async (req, res) => {
     purchaseOrderId,
     partId,
     quantity,
+    requester,
     status: 'PRODUCING',
     startedAt: new Date().toISOString(),
   };

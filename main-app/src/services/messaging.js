@@ -14,6 +14,7 @@ async function publishOrderingMessage({ purchaseOrderId, partId, quantity, categ
     partId,
     quantity,
     category,
+    requester: config.userPrefix || 'unknown',
     callbackTopicArn: config.sns.receivingTopicArn,
     orderedAt: new Date().toISOString(),
   };

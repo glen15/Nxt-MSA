@@ -18,16 +18,24 @@ db.exec(`
     statusType TEXT NOT NULL DEFAULT 'progress',
     progress INTEGER DEFAULT 0,
     detail TEXT,
+    requester TEXT,
     startedAt TEXT NOT NULL,
     completedAt TEXT
   )
 `);
 
+// requester 컬럼 마이그레이션 (기존 DB 호환)
+try {
+  db.exec('ALTER TABLE jobs ADD COLUMN requester TEXT');
+} catch (e) {
+  // 이미 존재하면 무시
+}
+
 const upsertStmt = db.prepare(`
   INSERT OR REPLACE INTO jobs
-    (id, factory, purchaseOrderId, partId, quantity, status, statusType, progress, detail, startedAt, completedAt)
+    (id, factory, purchaseOrderId, partId, quantity, status, statusType, progress, detail, requester, startedAt, completedAt)
   VALUES
-    (@id, @factory, @purchaseOrderId, @partId, @quantity, @status, @statusType, @progress, @detail, @startedAt, @completedAt)
+    (@id, @factory, @purchaseOrderId, @partId, @quantity, @status, @statusType, @progress, @detail, @requester, @startedAt, @completedAt)
 `);
 
 function upsertJob(job) {
@@ -41,6 +49,7 @@ function upsertJob(job) {
     statusType: job.statusType,
     progress: job.progress ?? 0,
     detail: job.detail || null,
+    requester: job.requester || null,
     startedAt: job.startedAt,
     completedAt: job.completedAt || null,
   });
