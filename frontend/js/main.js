@@ -230,7 +230,7 @@ async function loadReceiving() {
 
     container.innerHTML = `
       <table>
-        <thead><tr><th>부품</th><th>수량</th><th>공장</th><th>입고 시각</th></tr></thead>
+        <thead><tr><th>부품</th><th>수량</th><th>공장</th><th>생산 완료</th><th>입고 처리</th></tr></thead>
         <tbody>${received.slice(0, 20).map(renderReceivingRow).join('')}</tbody>
       </table>
     `;
@@ -240,14 +240,16 @@ async function loadReceiving() {
 }
 
 function renderReceivingRow(po) {
-  const time = po.receivedAt ? new Date(po.receivedAt).toLocaleTimeString('ko-KR') : '-';
+  const produced = po.producedAt ? new Date(po.producedAt).toLocaleTimeString('ko-KR') : '-';
+  const received = po.receivedAt ? new Date(po.receivedAt).toLocaleTimeString('ko-KR') : '-';
   const factoryLabels = { 'engine-factory': '🔧 엔진', 'tire-factory': '🛞 타이어', 'battery-factory': '🔋 배터리' };
   return `
     <tr>
       <td>${partLabel(po.partId)}</td>
       <td><strong>+${po.receivedQuantity || po.quantity}</strong></td>
       <td>${factoryLabels[po.factoryId] || po.factoryId || '-'}</td>
-      <td>${time}</td>
+      <td>${produced}</td>
+      <td>${received}</td>
     </tr>
   `;
 }

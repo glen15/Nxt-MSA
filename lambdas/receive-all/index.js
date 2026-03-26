@@ -17,7 +17,7 @@ exports.handler = async (event) => {
     const snsEnvelope = JSON.parse(record.body);
     const message = JSON.parse(snsEnvelope.Message);
 
-    const { purchaseOrderId, partId, quantity, factoryId } = message;
+    const { purchaseOrderId, partId, quantity, factoryId, producedAt } = message;
     console.log(`[입고] 메시지 수신: ${partId} × ${quantity} from ${factoryId}`, JSON.stringify(message));
 
     // 1. 재고 충전 + orderPending 해제
@@ -47,11 +47,12 @@ exports.handler = async (event) => {
         new UpdateCommand({
           TableName: PURCHASE_ORDERS_TABLE,
           Key: { purchaseOrderId },
-          UpdateExpression: 'SET #s = :status, receivedAt = :now, factoryId = :fid, receivedQuantity = :qty',
+          UpdateExpression: 'SET #s = :status, receivedAt = :now, producedAt = :produced, factoryId = :fid, receivedQuantity = :qty',
           ExpressionAttributeNames: { '#s': 'status' },
           ExpressionAttributeValues: {
             ':status': 'RECEIVED',
             ':now': new Date().toISOString(),
+            ':produced': producedAt || new Date().toISOString(),
             ':fid': factoryId,
             ':qty': quantity,
           },
