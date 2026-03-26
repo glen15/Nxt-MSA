@@ -77,12 +77,46 @@ function renderOverview() {
     totalAll += s.total; ipAll += s.inProgress; doneAll += s.completed;
   });
 
-  var html = '<div style="text-align:center;margin-bottom:1.5rem">' +
-    '<div style="display:inline-flex;gap:2rem;background:#1e1e2e;border-radius:12px;padding:1rem 2rem">' +
-      '<div><div style="font-size:2rem;font-weight:700">' + totalAll + '</div><div style="color:#888;font-size:0.8rem">전체 요청</div></div>' +
-      '<div><div style="font-size:2rem;font-weight:700;color:#f39c12">' + ipAll + '</div><div style="color:#888;font-size:0.8rem">진행 중</div></div>' +
-      '<div><div style="font-size:2rem;font-weight:700;color:#2ecc71">' + doneAll + '</div><div style="color:#888;font-size:0.8rem">완료</div></div>' +
-    '</div></div>';
+  // 요청자별 집계
+  var requesterCount = {};
+  factories.forEach(function(f) {
+    (f.jobs || []).forEach(function(j) {
+      var r = j.requester || '-';
+      requesterCount[r] = (requesterCount[r] || 0) + 1;
+    });
+  });
+  var top5 = Object.entries(requesterCount).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 5);
+  var medals = ['🥇', '🥈', '🥉', '4', '5'];
+  var maxCount = top5.length > 0 ? top5[0][1] : 1;
+
+  var topHtml = '';
+  if (top5.length > 0) {
+    top5.forEach(function(entry, i) {
+      var barW = Math.round(entry[1] / maxCount * 100);
+      topHtml += '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;font-size:0.8rem">' +
+        '<span style="width:1.2rem;text-align:center">' + medals[i] + '</span>' +
+        '<span style="width:5rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + entry[0] + '</span>' +
+        '<div style="flex:1;background:#2a2a3e;border-radius:3px;height:14px;overflow:hidden">' +
+          '<div style="width:' + barW + '%;height:100%;background:linear-gradient(90deg,#f39c12,#e67e22);border-radius:3px"></div>' +
+        '</div>' +
+        '<strong style="width:1.5rem;text-align:right">' + entry[1] + '</strong>' +
+      '</div>';
+    });
+  } else {
+    topHtml = '<div style="color:#555;font-size:0.8rem;text-align:center">아직 요청 없음</div>';
+  }
+
+  var html = '<div style="display:flex;justify-content:center;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap">' +
+    '<div style="display:flex;gap:2rem;background:#1e1e2e;border-radius:12px;padding:1rem 2rem;align-items:center">' +
+      '<div style="text-align:center"><div style="font-size:2rem;font-weight:700">' + totalAll + '</div><div style="color:#888;font-size:0.8rem">전체 요청</div></div>' +
+      '<div style="text-align:center"><div style="font-size:2rem;font-weight:700;color:#f39c12">' + ipAll + '</div><div style="color:#888;font-size:0.8rem">진행 중</div></div>' +
+      '<div style="text-align:center"><div style="font-size:2rem;font-weight:700;color:#2ecc71">' + doneAll + '</div><div style="color:#888;font-size:0.8rem">완료</div></div>' +
+    '</div>' +
+    '<div style="background:#1e1e2e;border-radius:12px;padding:1rem 1.5rem;min-width:250px">' +
+      '<div style="font-size:0.75rem;color:#888;margin-bottom:0.5rem">🏆 최다 요청 Top 5</div>' +
+      topHtml +
+    '</div>' +
+  '</div>';
 
   // 공장별 카드
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">';
