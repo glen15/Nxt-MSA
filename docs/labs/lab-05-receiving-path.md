@@ -53,7 +53,7 @@ NxtCar → SNS(ordering) → SQS → Lambda(order-all) → 공장 API
 
 1. AWS 콘솔 → **SNS** → **주제 생성**
 2. 유형: **표준**
-3. 이름: `<USER_PREFIX>-receiving` (예: `kmucd1-00-receiving`)
+3. 이름: `<USER_PREFIX>-receiving` (예: `kmucd1-99-receiving`)
 4. **주제 생성**
 5. **ARN 복사** — 나중에 `.env`에 사용
 
@@ -63,7 +63,7 @@ NxtCar → SNS(ordering) → SQS → Lambda(order-all) → 공장 API
 
 1. AWS 콘솔 → **SQS** → **대기열 생성**
 2. 유형: **표준**
-3. 이름: `<USER_PREFIX>-receiving-queue` (예: `kmucd1-00-receiving-queue`)
+3. 이름: `<USER_PREFIX>-receiving-queue` (예: `kmucd1-99-receiving-queue`)
 4. 기본값 → **대기열 생성**
 
 > Lab 03에서는 SQS 3개 + 필터 정책을 사용했지만,
@@ -86,7 +86,7 @@ NxtCar → SNS(ordering) → SQS → Lambda(order-all) → 공장 API
 ### 4-1. 함수 생성
 
 1. AWS 콘솔 → **Lambda** → **함수 생성**
-2. 함수 이름: `<USER_PREFIX>-receive-lambda` (예: `kmucd1-00-receive-lambda`)
+2. 함수 이름: `<USER_PREFIX>-receive-lambda` (예: `kmucd1-99-receive-lambda`)
 3. 런타임: **Node.js 20.x** 이상
 4. 역할: **기본 실행 역할 변경** → **다른 역할 사용** → `Nxt-msa-lambda-role`
 5. **함수 생성**
@@ -175,8 +175,8 @@ exports.handler = async (event) => {
 
 | 키 | 값 |
 |---|---|
-| `PARTS_TABLE` | `<USER_PREFIX>-Parts` (예: `kmucd1-00-Parts`) |
-| `PURCHASE_ORDERS_TABLE` | `<USER_PREFIX>-PurchaseOrders` (예: `kmucd1-00-PurchaseOrders`) |
+| `PARTS_TABLE` | `<USER_PREFIX>-Parts` (예: `kmucd1-99-Parts`) |
+| `PURCHASE_ORDERS_TABLE` | `<USER_PREFIX>-PurchaseOrders` (예: `kmucd1-99-PurchaseOrders`) |
 
 > ⚠️ 값 끝에 **공백이 들어가지 않도록** 주의하세요. 공백이 포함되면 DynamoDB 테이블을 찾지 못합니다.
 
@@ -232,7 +232,7 @@ const response = await callFactory(`${factory.url}${factory.path}`, {
 Cloud9에서 main-app의 `.env` 파일에 추가합니다:
 
 ```
-RECEIVING_TOPIC_ARN=arn:aws:sns:us-east-1:123456789012:kmucd1-00-receiving
+RECEIVING_TOPIC_ARN=arn:aws:sns:us-east-1:123456789012:kmucd1-99-receiving
 ```
 
 > Step 1에서 복사해 둔 receiving 토픽 ARN을 붙여넣으세요.
@@ -247,8 +247,8 @@ npm start
 **예상 출력:**
 ```
    [SNS]
-   ✅ 발주토픽: arn:aws:sns:...:kmucd1-00-sns
-   ✅ 입고토픽: arn:aws:sns:...:kmucd1-00-receiving
+   ✅ 발주토픽: arn:aws:sns:...:kmucd1-99-sns
+   ✅ 입고토픽: arn:aws:sns:...:kmucd1-99-receiving
 ```
 
 `입고토픽`이 ✅로 표시되면 준비 완료입니다.
