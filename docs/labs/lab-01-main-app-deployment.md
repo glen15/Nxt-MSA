@@ -185,22 +185,6 @@ http://<Cloud9퍼블릭IP>:3000/
 
 > 💡 이 서버는 API 전용입니다. 프론트엔드(HTML)는 S3가 담당하고, 이 서버는 데이터만 제공합니다.
 
-### 2-5. API 테스트 (새 터미널)
-
-Cloud9에서 터미널을 하나 더 열고 (`+` 버튼 → New Terminal):
-
-```bash
-# 헬스 체크
-curl http://localhost:3000/api/health | jq
-
-# 재고 조회 — 에러 예상
-curl http://localhost:3000/api/parts
-```
-
-**예상 결과:**
-- ✅ `GET /api/health` → `{ "status": "running" }`
-- ❌ `GET /api/parts` → 500 에러 (테이블 없음)
-
 ---
 
 ## Step 3: DynamoDB 테이블 생성 (15분)
