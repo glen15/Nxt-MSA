@@ -137,7 +137,7 @@ function renderJobTable(jobs, showFactory, pageKey) {
     '<table><thead><tr>' + fth +
     '<th>요청자</th><th>작업 ID</th><th>발주 번호</th><th>부품</th>' +
     '<th style="text-align:center">수량</th><th>상태</th>' +
-    '<th>진행률</th><th>경과 시간</th><th>상세</th></tr></thead><tbody>';
+    '<th>진행률</th><th>요청 시각</th><th>경과 시간</th><th>상세</th></tr></thead><tbody>';
 
   paged.forEach(function(job) {
     var elapsed = formatElapsed(job.startedAt, job.completedAt);
@@ -172,6 +172,7 @@ function renderJobTable(jobs, showFactory, pageKey) {
       '<td class="qty">' + (job.quantity||0) + '</td>' +
       '<td><span class="badge ' + bc + '">' + (job.status||'') + '</span></td>' +
       '<td>' + ph + '</td>' +
+      '<td style="font-size:0.75rem;color:#aaa">' + formatTime(job.startedAt) + '</td>' +
       '<td class="elapsed ' + (isDone ? 'done' : 'active') + '">' + elapsed + '</td>' +
       '<td class="detail">' + (job.detail||'') + '</td></tr>';
   });
@@ -401,6 +402,12 @@ function copyCode(id) {
 function truncate(s, max) {
   if (!s) return '-';
   return s.length > max ? s.slice(0, max) + '...' : s;
+}
+
+function formatTime(iso) {
+  if (!iso) return '-';
+  var d = new Date(iso);
+  return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 function formatElapsed(startISO, endISO) {
