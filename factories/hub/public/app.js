@@ -70,33 +70,30 @@ function renderContent() {
 }
 
 function renderOverview() {
-  var cards = '<div class="overview-cards">';
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">';
   factories.forEach(function(f) {
     var s = f.stats || { total:0, inProgress:0, completed:0 };
-    cards += '<div class="factory-card" data-tab="' + f.name + '" style="border-left-color:' + f.color + '">' +
-      '<div class="card-header"><div class="card-name">' + f.emoji + ' ' + f.displayName + '</div></div>' +
-      '<div class="card-stats">' +
-        '<span>전체 <span class="card-stat-num" style="color:#fff">' + s.total + '</span></span>' +
-        '<span>진행 <span class="card-stat-num" style="color:' + f.color + '">' + s.inProgress + '</span></span>' +
-        '<span>완료 <span class="card-stat-num" style="color:#2ecc71">' + s.completed + '</span></span>' +
-      '</div></div>';
-  });
-  cards += '</div>';
-
-  var allJobs = [];
-  factories.forEach(function(f) {
-    if (!f.jobs) return;
-    var m = FACTORY_META[f.name] || {};
-    f.jobs.forEach(function(j) {
+    var jobs = (f.jobs || []).map(function(j) {
       var copy = {};
       for (var k in j) copy[k] = j[k];
-      copy.factoryName = m.displayName || f.name;
-      copy.factoryEmoji = m.emoji || '';
-      copy.factoryColor = m.color || f.color;
-      allJobs.push(copy);
+      copy.factoryColor = f.color;
+      return copy;
     });
+
+    html += '<div style="background:#1e1e2e;border-radius:8px;padding:1rem;border-top:3px solid ' + f.color + ';max-height:600px;overflow-y:auto">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">' +
+        '<div style="font-weight:700;font-size:1rem">' + f.emoji + ' ' + f.displayName + '</div>' +
+        '<div style="font-size:0.8rem;color:#888">' +
+          '<span>전체 <strong style="color:#fff">' + s.total + '</strong></span> · ' +
+          '<span>진행 <strong style="color:' + f.color + '">' + s.inProgress + '</strong></span> · ' +
+          '<span>완료 <strong style="color:#2ecc71">' + s.completed + '</strong></span>' +
+        '</div>' +
+      '</div>' +
+      renderJobTable(jobs, false, 'overview-' + f.name) +
+    '</div>';
   });
-  return cards + renderJobTable(allJobs, true, 'all');
+  html += '</div>';
+  return html;
 }
 
 function renderFactory(f) {
