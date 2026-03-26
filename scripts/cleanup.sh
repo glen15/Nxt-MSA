@@ -73,13 +73,12 @@ for table in $TABLES; do
   aws dynamodb delete-table --table-name $table --region $REGION --query 'TableDescription.TableStatus' --output text 2>/dev/null || true
 done
 
-# 6. S3 버킷 삭제
+# 6. S3 버킷은 삭제하지 않음 (프론트엔드 재배포 필요)
 echo ""
-echo "=== S3 Buckets ==="
+echo "=== S3 Buckets (삭제 제외) ==="
 BUCKETS=$(aws s3 ls | awk '{print $3}' | grep "^${PREFIX}" || true)
 for bucket in $BUCKETS; do
-  echo "  삭제: $bucket (내용물 포함)"
-  aws s3 rb "s3://${bucket}" --force --region $REGION 2>/dev/null || true
+  echo "  유지: $bucket"
 done
 
 # 결과 확인
@@ -92,15 +91,12 @@ R_SNS=$(aws sns list-topics --region $REGION --query 'Topics[*].TopicArn' --outp
 R_SQS=$(aws sqs list-queues --region $REGION --queue-name-prefix $PREFIX --query 'QueueUrls' --output text 2>/dev/null | tr '\t' '\n' | grep "${PREFIX}" | wc -l | tr -d ' ')
 R_LAMBDA=$(aws lambda list-functions --region $REGION --query "Functions[?starts_with(FunctionName, \`${PREFIX}\`)].FunctionName" --output text 2>/dev/null | wc -w | tr -d ' ')
 R_DDB=$(aws dynamodb list-tables --region $REGION --query 'TableNames' --output text | tr '\t' '\n' | grep "^${PREFIX}" 2>/dev/null | wc -l | tr -d ' ')
-R_S3=$(aws s3 ls | awk '{print $3}' | grep "^${PREFIX}" 2>/dev/null | wc -l | tr -d ' ')
-
 echo "  SNS:      ${R_SNS}개 남음"
 echo "  SQS:      ${R_SQS}개 남음"
 echo "  Lambda:   ${R_LAMBDA}개 남음"
 echo "  DynamoDB: ${R_DDB}개 남음"
-echo "  S3:       ${R_S3}개 남음"
 
-TOTAL=$((R_SNS + R_SQS + R_LAMBDA + R_DDB + R_S3))
+TOTAL=$((R_SNS + R_SQS + R_LAMBDA + R_DDB))
 if [ "$TOTAL" -eq 0 ]; then
   echo ""
   echo "🎉 ${PREFIX}* 리소스 전부 삭제 완료!"
