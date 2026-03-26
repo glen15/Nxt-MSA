@@ -70,26 +70,77 @@ function renderContent() {
 }
 
 function renderOverview() {
-  var html = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">';
+  // 전체 통계
+  var totalAll = 0, ipAll = 0, doneAll = 0;
   factories.forEach(function(f) {
     var s = f.stats || { total:0, inProgress:0, completed:0 };
-    var jobs = (f.jobs || []).map(function(j) {
-      var copy = {};
-      for (var k in j) copy[k] = j[k];
-      copy.factoryColor = f.color;
-      return copy;
-    });
+    totalAll += s.total; ipAll += s.inProgress; doneAll += s.completed;
+  });
 
-    html += '<div style="background:#1e1e2e;border-radius:8px;padding:1rem;border-top:3px solid ' + f.color + ';max-height:600px;overflow-y:auto">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">' +
-        '<div style="font-weight:700;font-size:1rem">' + f.emoji + ' ' + f.displayName + '</div>' +
-        '<div style="font-size:0.8rem;color:#888">' +
-          '<span>전체 <strong style="color:#fff">' + s.total + '</strong></span> · ' +
-          '<span>진행 <strong style="color:' + f.color + '">' + s.inProgress + '</strong></span> · ' +
-          '<span>완료 <strong style="color:#2ecc71">' + s.completed + '</strong></span>' +
+  var html = '<div style="text-align:center;margin-bottom:1.5rem">' +
+    '<div style="display:inline-flex;gap:2rem;background:#1e1e2e;border-radius:12px;padding:1rem 2rem">' +
+      '<div><div style="font-size:2rem;font-weight:700">' + totalAll + '</div><div style="color:#888;font-size:0.8rem">전체 요청</div></div>' +
+      '<div><div style="font-size:2rem;font-weight:700;color:#f39c12">' + ipAll + '</div><div style="color:#888;font-size:0.8rem">진행 중</div></div>' +
+      '<div><div style="font-size:2rem;font-weight:700;color:#2ecc71">' + doneAll + '</div><div style="color:#888;font-size:0.8rem">완료</div></div>' +
+    '</div></div>';
+
+  // 공장별 카드
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">';
+  factories.forEach(function(f) {
+    var s = f.stats || { total:0, inProgress:0, completed:0 };
+    var pct = s.total > 0 ? Math.round(s.completed / s.total * 100) : 0;
+    var ipPct = s.total > 0 ? Math.round(s.inProgress / s.total * 100) : 0;
+
+    // 도넛 차트 (CSS conic-gradient)
+    var donut = s.total > 0
+      ? 'background:conic-gradient(#2ecc71 0% ' + pct + '%, ' + f.color + ' ' + pct + '% ' + (pct + ipPct) + '%, #333 ' + (pct + ipPct) + '% 100%)'
+      : 'background:#333';
+
+    // 최근 작업 (최신 3개)
+    var recent = (f.jobs || []).slice().sort(function(a, b) {
+      return new Date(b.startedAt) - new Date(a.startedAt);
+    }).slice(0, 3);
+
+    var recentHtml = '';
+    if (recent.length === 0) {
+      recentHtml = '<div style="color:#555;font-size:0.8rem;text-align:center;padding:0.5rem">대기 중</div>';
+    } else {
+      recent.forEach(function(j) {
+        var isDone = j.statusType === 'done';
+        var icon = isDone ? '✅' : '⏳';
+        var elapsed = formatElapsed(j.startedAt, j.completedAt);
+        recentHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.3rem 0;border-bottom:1px solid #2a2a3e;font-size:0.75rem">' +
+          '<span>' + icon + ' ' + (j.requester || '-') + '</span>' +
+          '<span style="color:#888">' + (j.partId || '') + '</span>' +
+          '<span style="color:' + (isDone ? '#2ecc71' : f.color) + '">' + elapsed + '</span>' +
+        '</div>';
+      });
+    }
+
+    html += '<div style="background:#1e1e2e;border-radius:12px;padding:1.2rem;border-top:3px solid ' + f.color + '">' +
+      // 헤더
+      '<div style="text-align:center;margin-bottom:1rem">' +
+        '<div style="font-size:1.2rem;font-weight:700">' + f.emoji + ' ' + f.displayName + '</div>' +
+      '</div>' +
+      // 도넛 + 숫자
+      '<div style="display:flex;align-items:center;justify-content:center;gap:1.5rem;margin-bottom:1rem">' +
+        '<div style="position:relative;width:80px;height:80px">' +
+          '<div style="width:80px;height:80px;border-radius:50%;' + donut + '"></div>' +
+          '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;border-radius:50%;background:#1e1e2e;display:flex;align-items:center;justify-content:center">' +
+            '<span style="font-size:1rem;font-weight:700">' + pct + '%</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="text-align:left">' +
+          '<div style="margin-bottom:0.3rem"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2ecc71;margin-right:0.4rem"></span><span style="color:#aaa;font-size:0.8rem">완료 </span><strong>' + s.completed + '</strong></div>' +
+          '<div style="margin-bottom:0.3rem"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + f.color + ';margin-right:0.4rem"></span><span style="color:#aaa;font-size:0.8rem">진행 </span><strong>' + s.inProgress + '</strong></div>' +
+          '<div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#333;margin-right:0.4rem"></span><span style="color:#aaa;font-size:0.8rem">전체 </span><strong>' + s.total + '</strong></div>' +
         '</div>' +
       '</div>' +
-      renderJobTable(jobs, false, 'overview-' + f.name) +
+      // 최근 작업
+      '<div style="border-top:1px solid #2a2a3e;padding-top:0.6rem">' +
+        '<div style="font-size:0.75rem;color:#666;margin-bottom:0.3rem">최근 작업</div>' +
+        recentHtml +
+      '</div>' +
     '</div>';
   });
   html += '</div>';
