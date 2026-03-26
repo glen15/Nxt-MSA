@@ -10,7 +10,7 @@ DynamoDB를 연결하여 차량 주문 시스템을 완성한다.
 ## 사전 준비
 - Cloud9 IDE 환경 (m5.large)
 - 소스 코드 클론 완료: `git clone https://github.com/glen15/Nxt-MSA.git`
-- 강사가 안내한 본인 유저 ID (예: `kmucd1-03`)
+- 강사가 안내한 본인 유저 ID (예: `kmucd1-99`)
 
 ## 전체 흐름
 
@@ -31,7 +31,7 @@ Step 5  시드 데이터 + 주문 테스트   → 재고 표시, 주문 가능
 ### 1-1. S3 버킷 생성
 
 1. AWS 콘솔 → S3 → **버킷 만들기**
-2. 버킷 이름: `<본인유저ID>-s3` (예: `kmucd1-03-s3`)
+2. 버킷 이름: `<본인유저ID>-s3` (예: `kmucd1-99-s3`)
 3. 리전: `us-east-1` (버지니아)
 4. **모든 퍼블릭 액세스 차단** → 체크 해제 + "현재 설정으로 인해..." 체크
 5. 나머지 기본값 → **버킷 만들기**
@@ -133,13 +133,13 @@ cp .env.example .env
 `.env` 파일을 열어 `USER_PREFIX`를 **본인 유저 ID**로 변경합니다:
 
 ```
-USER_PREFIX=kmucd1-03
+USER_PREFIX=kmucd1-99
 APP_PORT=3000
 AWS_REGION=us-east-1
 ```
 
 > ⚠️ `USER_PREFIX`는 강사가 안내한 본인 번호를 정확히 입력하세요.
-> 이 값으로 DynamoDB 테이블 이름이 결정됩니다 (예: `kmucd1-03-Parts`).
+> 이 값으로 DynamoDB 테이블 이름이 결정됩니다 (예: `kmucd1-99-Parts`).
 
 ### 2-3. 의존성 설치 + 서버 시작
 
@@ -151,13 +151,13 @@ npm start
 **예상 출력:**
 ```
 🚗 NxtCar 메인 앱서버 (포트: 3000)
-   유저: kmucd1-03
+   유저: kmucd1-99
    리전: us-east-1
 
    [DynamoDB]
-   ❌ kmucd1-03-Parts — 테이블 없음
-   ❌ kmucd1-03-Orders — 테이블 없음
-   ❌ kmucd1-03-PurchaseOrders — 테이블 없음
+   ❌ kmucd1-99-Parts — 테이블 없음
+   ❌ kmucd1-99-Orders — 테이블 없음
+   ❌ kmucd1-99-PurchaseOrders — 테이블 없음
 
    [SNS]
    ❌ 발주토픽 — 미설정
@@ -245,18 +245,18 @@ AWS의 NoSQL 데이터베이스입니다. RDB(MySQL, PostgreSQL)와 다른 점:
 
 본인 `USER_PREFIX`를 접두사로 테이블 3개를 생성합니다.
 
-> 예: USER_PREFIX가 `kmucd1-03`이면:
+> 예: USER_PREFIX가 `kmucd1-99`이면:
 >
 > | 테이블 이름 | 파티션 키 | 타입 |
 > |------------|----------|------|
-> | `kmucd1-03-Parts` | `partId` | 문자열 |
-> | `kmucd1-03-Orders` | `orderId` | 문자열 |
-> | `kmucd1-03-PurchaseOrders` | `purchaseOrderId` | 문자열 |
+> | `kmucd1-99-Parts` | `partId` | 문자열 |
+> | `kmucd1-99-Orders` | `orderId` | 문자열 |
+> | `kmucd1-99-PurchaseOrders` | `purchaseOrderId` | 문자열 |
 
 ### 4-1. Parts 테이블
 
 1. AWS 콘솔 → **DynamoDB** → 왼쪽 메뉴 **테이블** → **테이블 만들기**
-2. 테이블 이름: `<USER_PREFIX>-Parts` (예: `kmucd1-03-Parts`)
+2. 테이블 이름: `<USER_PREFIX>-Parts` (예: `kmucd1-99-Parts`)
 3. 파티션 키: `partId` — 타입: **문자열**
 4. 정렬 키: 비워두기 (사용 안 함)
 5. 테이블 설정: **기본 설정** 그대로 (온디맨드 모드)
@@ -269,7 +269,7 @@ AWS의 NoSQL 데이터베이스입니다. RDB(MySQL, PostgreSQL)와 다른 점:
 같은 방법으로 두 번째 테이블을 만듭니다:
 
 1. **테이블 만들기** 클릭
-2. 테이블 이름: `<USER_PREFIX>-Orders` (예: `kmucd1-03-Orders`)
+2. 테이블 이름: `<USER_PREFIX>-Orders` (예: `kmucd1-99-Orders`)
 3. 파티션 키: `orderId` — 타입: **문자열**
 4. 기본 설정 그대로 → **테이블 만들기**
 
@@ -278,7 +278,7 @@ AWS의 NoSQL 데이터베이스입니다. RDB(MySQL, PostgreSQL)와 다른 점:
 세 번째 테이블:
 
 1. **테이블 만들기** 클릭
-2. 테이블 이름: `<USER_PREFIX>-PurchaseOrders` (예: `kmucd1-03-PurchaseOrders`)
+2. 테이블 이름: `<USER_PREFIX>-PurchaseOrders` (예: `kmucd1-99-PurchaseOrders`)
 3. 파티션 키: `purchaseOrderId` — 타입: **문자열**
 4. 기본 설정 그대로 → **테이블 만들기**
 
@@ -297,9 +297,9 @@ npm start
 **예상 출력:**
 ```
    [DynamoDB]
-   ✅ kmucd1-03-Parts — 연결됨 (0건)
-   ✅ kmucd1-03-Orders — 연결됨 (0건)
-   ✅ kmucd1-03-PurchaseOrders — 연결됨 (0건)
+   ✅ kmucd1-99-Parts — 연결됨 (0건)
+   ✅ kmucd1-99-Orders — 연결됨 (0건)
+   ✅ kmucd1-99-PurchaseOrders — 연결됨 (0건)
 ```
 
 ❌가 ✅로 바뀌었습니다! 하지만 아직 데이터가 0건입니다.
@@ -507,7 +507,7 @@ curl http://localhost:3000/api/parts | jq
 
 ### 서버 로그에 `❌ ... 테이블 없음`
 → DynamoDB 테이블 이름이 `.env`의 `USER_PREFIX`와 일치하는지 확인.
-예: `USER_PREFIX=kmucd1-03`이면 테이블은 `kmucd1-03-Parts`
+예: `USER_PREFIX=kmucd1-99`이면 테이블은 `kmucd1-99-Parts`
 
 ### `GET /api/parts` 500 에러
 → 서버 로그의 DynamoDB 상태를 확인하세요. 테이블이 없거나 IAM 권한이 부족할 수 있습니다.
