@@ -16,6 +16,7 @@ const config = {
   },
   sns: {
     orderingTopicArn: process.env.ORDERING_TOPIC_ARN || '',
+    receivingTopicArn: process.env.RECEIVING_TOPIC_ARN || '',
   },
 };
 
