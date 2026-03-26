@@ -90,7 +90,7 @@ app.post('/api/orders', async (req, res) => {
   console.log(`[배터리공장] 주문 접수: ${partId} × ${quantity} (${orderNumber})`);
 
   // 비동기 생산 — 배터리는 생산 시간이 김 (5~12초)
-  const delay = 5000 + Math.random() * 7000;
+  const delay = 10000 + Math.random() * 14000;
 
   setTimeout(() => {
     order.state = 'CHARGING_CELLS';

@@ -118,7 +118,7 @@ app.post('/api/manufacture', async (req, res) => {
     job.phase = phases[phaseIndex];
     job.progress = Math.round((phaseIndex / (phases.length - 1)) * 100);
     saveJob(job);
-  }, 2000);
+  }, 4000);
 
   // 202 Accepted — 접수 확인에 4초 소요 (Lambda 타임아웃 교육용)
   setTimeout(() => {

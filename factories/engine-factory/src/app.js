@@ -76,7 +76,7 @@ app.post('/api/produce', async (req, res) => {
   console.log(`[엔진공장] 생산 시작: ${partId} × ${quantity} (jobId: ${jobId})`);
 
   // 비동기 생산 시뮬레이션 (3~8초)
-  const delay = 3000 + Math.random() * 5000;
+  const delay = 6000 + Math.random() * 10000;
   setTimeout(async () => {
     job.status = 'COMPLETED';
     job.completedAt = new Date().toISOString();
