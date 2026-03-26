@@ -15,8 +15,7 @@ router.get('/', async (req, res) => {
     const orders = await ordersModel.getAll();
     res.json({ orders });
   } catch (err) {
-    console.error('[주문 조회 실패]', err.message);
-    res.status(500).json({ error: '주문 데이터를 불러올 수 없습니다.', detail: err.message });
+    res.status(500).json({ error: '주문 데이터를 불러올 수 없습니다.' });
   }
 });
 
@@ -29,8 +28,7 @@ router.get('/:orderId', async (req, res) => {
     }
     res.json({ order });
   } catch (err) {
-    console.error('[주문 조회 실패]', err.message);
-    res.status(500).json({ error: '주문 조회 실패', detail: err.message });
+    res.status(500).json({ error: '주문 조회 실패' });
   }
 });
 

@@ -10,8 +10,7 @@ router.get('/', async (req, res) => {
     const parts = await partsModel.getAll();
     res.json({ parts });
   } catch (err) {
-    console.error('[부품 조회 실패]', err.message);
-    res.status(500).json({ error: '부품 데이터를 불러올 수 없습니다.', detail: err.message });
+    res.status(500).json({ error: '부품 데이터를 불러올 수 없습니다.' });
   }
 });
 
@@ -25,8 +24,7 @@ router.post('/reset', async (req, res) => {
     console.log('[리셋] 부품 재고 초기화 완료');
     res.json({ message: '재고가 초기화되었습니다.', parts: INITIAL_PARTS });
   } catch (err) {
-    console.error('[리셋 실패]', err.message);
-    res.status(500).json({ error: '재고 초기화 실패', detail: err.message });
+    res.status(500).json({ error: '재고 초기화 실패' });
   }
 });
 
@@ -39,8 +37,7 @@ router.get('/:partId', async (req, res) => {
     }
     res.json({ part });
   } catch (err) {
-    console.error('[부품 조회 실패]', err.message);
-    res.status(500).json({ error: '부품 조회 실패', detail: err.message });
+    res.status(500).json({ error: '부품 조회 실패' });
   }
 });
 
@@ -53,8 +50,7 @@ router.post('/:partId/check', async (req, res) => {
     }
     res.json(result);
   } catch (err) {
-    console.error('[발주 체크 실패]', err.message);
-    res.status(500).json({ error: '발주 체크 실패', detail: err.message });
+    res.status(500).json({ error: '발주 체크 실패' });
   }
 });
 
