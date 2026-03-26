@@ -243,9 +243,12 @@ AWS의 NoSQL 데이터베이스입니다. RDB(MySQL, PostgreSQL)와 다른 점:
 본인 `USER_PREFIX`를 접두사로 테이블 3개를 생성합니다.
 
 > 예: USER_PREFIX가 `kmucd1-03`이면:
-> - `kmucd1-03-Parts`
-> - `kmucd1-03-Orders`
-> - `kmucd1-03-PurchaseOrders`
+>
+> | 테이블 이름 | 파티션 키 | 타입 |
+> |------------|----------|------|
+> | `kmucd1-03-Parts` | `partId` | 문자열 |
+> | `kmucd1-03-Orders` | `orderId` | 문자열 |
+> | `kmucd1-03-PurchaseOrders` | `purchaseOrderId` | 문자열 |
 
 ### 4-1. Parts 테이블
 
