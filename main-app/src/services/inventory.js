@@ -51,25 +51,37 @@ async function checkAndOrder(partId) {
 
 async function deductAndCheck(requiredParts) {
   const results = [];
-  const missingParts = {};
 
-  // 1단계: 재고 차감 (반드시 전부 시도)
+  // 1단계: 재고 충분한지 사전 확인
+  const missingParts = {};
   for (const [partId, qty] of Object.entries(requiredParts)) {
-    try {
-      const updated = await partsModel.deductStock(partId, qty);
-      results.push({ partId, success: true, remaining: updated.currentStock });
-    } catch (err) {
-      if (err.name === 'ConditionalCheckFailedException') {
-        const part = await partsModel.getById(partId);
-        missingParts[partId] = qty - (part?.currentStock || 0);
-        results.push({ partId, success: false, missing: missingParts[partId] });
-      } else {
-        throw err;
-      }
+    const part = await partsModel.getById(partId);
+    if (!part || part.currentStock < qty) {
+      missingParts[partId] = qty - (part?.currentStock || 0);
     }
   }
 
-  // 2단계: 임계치 체크 → 자동 발주 (실패해도 차감에 영향 없음)
+  if (Object.keys(missingParts).length > 0) {
+    // 재고 부족 — 차감 없이 발주 체크만
+    for (const partId of Object.keys(requiredParts)) {
+      try {
+        await checkAndOrder(partId);
+      } catch (err) {
+        console.error(`[발주 체크 실패] ${partId}: ${err.message}`);
+      }
+    }
+    return { results: Object.entries(requiredParts).map(([partId, qty]) => ({
+      partId, success: false, missing: missingParts[partId] || 0,
+    })), missingParts };
+  }
+
+  // 2단계: 전부 충분 → 일괄 차감
+  for (const [partId, qty] of Object.entries(requiredParts)) {
+    const updated = await partsModel.deductStock(partId, qty);
+    results.push({ partId, success: true, remaining: updated.currentStock });
+  }
+
+  // 3단계: 임계치 체크 → 자동 발주
   for (const r of results) {
     try {
       await checkAndOrder(r.partId);
@@ -78,8 +90,7 @@ async function deductAndCheck(requiredParts) {
     }
   }
 
-  const hasMissing = Object.keys(missingParts).length > 0;
-  return { results, missingParts: hasMissing ? missingParts : null };
+  return { results, missingParts: null };
 }
 
 module.exports = { checkAndOrder, deductAndCheck };
