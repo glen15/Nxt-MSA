@@ -15,3 +15,11 @@ workshop/dist/
 workshop/infra/.terraform/
 workshop/infra/terraform.tfstate*
 workshop/infra/.terraform.lock.hcl
+
+# Terraform — instructor & student
+infra/terraform/**/terraform.tfstate*
+infra/terraform/**/terraform.tfvars
+infra/terraform/**/.terraform/
+infra/terraform/**/.terraform.lock.hcl
+*.pem
+*.key
