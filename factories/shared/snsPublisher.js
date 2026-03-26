@@ -2,13 +2,11 @@
 const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
 
 const REGION = process.env.AWS_REGION || 'us-east-1';
-const RECEIVING_TOPIC_ARN = process.env.RECEIVING_TOPIC_ARN || '';
-
 const snsClient = new SNSClient({ region: REGION });
 
-async function publishReceivingMessage({ purchaseOrderId, partId, quantity, factoryId }) {
-  if (!RECEIVING_TOPIC_ARN) {
-    console.log('[SNS 미설정] 입고 메시지 스킵:', { purchaseOrderId, partId, quantity });
+async function publishReceivingMessage({ purchaseOrderId, partId, quantity, factoryId, callbackTopicArn }) {
+  if (!callbackTopicArn) {
+    console.log('[SNS 미설정] 입고 메시지 스킵 (callbackTopicArn 없음):', { purchaseOrderId, partId, quantity });
     return null;
   }
 
@@ -22,7 +20,7 @@ async function publishReceivingMessage({ purchaseOrderId, partId, quantity, fact
 
   const result = await snsClient.send(
     new PublishCommand({
-      TopicArn: RECEIVING_TOPIC_ARN,
+      TopicArn: callbackTopicArn,
       Message: JSON.stringify(message),
       MessageAttributes: {
         partId: { DataType: 'String', StringValue: partId },
@@ -30,7 +28,7 @@ async function publishReceivingMessage({ purchaseOrderId, partId, quantity, fact
     })
   );
 
-  console.log(`[SNS] 입고 메시지 발행: ${partId} × ${quantity} (MessageId: ${result.MessageId})`);
+  console.log(`[SNS] 입고 메시지 발행: ${partId} × ${quantity} → ${callbackTopicArn.split(':').pop()} (MessageId: ${result.MessageId})`);
   return result;
 }
 

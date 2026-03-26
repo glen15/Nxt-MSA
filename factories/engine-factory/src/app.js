@@ -49,7 +49,7 @@ app.get('/api/health', (req, res) => {
 // 생산 요청 — POST /api/produce
 // 엔진 공장의 고유 API (다른 공장과 의도적으로 다름)
 app.post('/api/produce', async (req, res) => {
-  const { purchaseOrderId, partId, quantity, requester } = req.body;
+  const { purchaseOrderId, partId, quantity, requester, callbackTopicArn } = req.body;
 
   if (!purchaseOrderId || !partId || !quantity) {
     return res.status(400).json({ error: 'purchaseOrderId, partId, quantity 필수' });
@@ -89,6 +89,7 @@ app.post('/api/produce', async (req, res) => {
         partId,
         quantity,
         factoryId: 'engine-factory',
+        callbackTopicArn,
       });
     } catch (err) {
       console.error('[엔진공장] SNS 발행 실패:', err.message);

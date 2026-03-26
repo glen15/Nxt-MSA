@@ -57,7 +57,7 @@ app.get('/api/ping', (req, res) => {
 // 생산 요청 — POST /api/orders
 // 배터리 공장의 고유 API (주문 접수 스타일)
 app.post('/api/orders', async (req, res) => {
-  const { purchaseOrderId, partId, quantity, requester } = req.body;
+  const { purchaseOrderId, partId, quantity, requester, callbackTopicArn } = req.body;
 
   if (!purchaseOrderId || !partId || !quantity) {
     return res.status(422).json({
@@ -116,6 +116,7 @@ app.post('/api/orders', async (req, res) => {
         partId,
         quantity,
         factoryId: 'battery-factory',
+        callbackTopicArn,
       });
     } catch (err) {
       console.error('[배터리공장] SNS 발행 실패:', err.message);

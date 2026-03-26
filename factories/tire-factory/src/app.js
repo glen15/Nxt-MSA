@@ -59,7 +59,7 @@ app.get('/api/health', (req, res) => {
 // 생산 요청 — POST /api/manufacture
 // 타이어 공장의 고유 API (엔진 공장과 다른 엔드포인트명)
 app.post('/api/manufacture', async (req, res) => {
-  const { purchaseOrderId, partId, quantity, requester } = req.body;
+  const { purchaseOrderId, partId, quantity, requester, callbackTopicArn } = req.body;
 
   if (!purchaseOrderId || !partId || !quantity) {
     return res.status(400).json({
@@ -109,6 +109,7 @@ app.post('/api/manufacture', async (req, res) => {
           partId,
           quantity,
           factoryId: 'tire-factory',
+          callbackTopicArn,
         });
       } catch (err) {
         console.error('[타이어공장] SNS 발행 실패:', err.message);
