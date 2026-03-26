@@ -73,7 +73,7 @@ app.post('/api/produce', async (req, res) => {
 
   jobs.set(jobId, job);
   saveJob(job);
-  console.log(`[엔진공장] 생산 시작: ${partId} × ${quantity} (jobId: ${jobId})`);
+  console.log(`[엔진공장] 생산 시작: ${partId} × ${quantity} (jobId: ${jobId}) [콜백: ${callbackTopicArn || '없음'}]`);
 
   // 비동기 생산 시뮬레이션 (3~8초)
   const delay = 6000 + Math.random() * 10000;

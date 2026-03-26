@@ -87,7 +87,7 @@ app.post('/api/manufacture', async (req, res) => {
 
   manufacturingJobs.set(manufacturingId, job);
   saveJob(job);
-  console.log(`[타이어공장] 제조 시작: ${partId} × ${quantity} (${manufacturingId})`);
+  console.log(`[타이어공장] 제조 시작: ${partId} × ${quantity} (${manufacturingId}) [콜백: ${callbackTopicArn || '없음'}]`);
 
   // 비동기 생산 시뮬레이션 — 단계별 진행
   const phases = ['MIXING_RUBBER', 'MOLDING', 'VULCANIZING', 'QUALITY_CHECK', 'DONE'];

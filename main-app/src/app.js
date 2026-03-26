@@ -74,6 +74,7 @@ app.listen(config.port, async () => {
   // SNS 연결 상태
   console.log('\n   [SNS]');
   console.log(`   ${config.sns.orderingTopicArn ? '✅ 발주토픽: ' + config.sns.orderingTopicArn : '❌ 발주토픽 — 미설정'}`);
+  console.log(`   ${config.sns.receivingTopicArn ? '✅ 입고토픽: ' + config.sns.receivingTopicArn : '❌ 입고토픽 — 미설정 (공장 콜백 불가)'}`);
 
   console.log();
 });
