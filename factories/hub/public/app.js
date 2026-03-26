@@ -6,6 +6,9 @@ var FACTORY_META = {
 
 var factories = [];
 var activeTab = 'all';
+var apiSubTab = 'all';
+var jobPages = {};
+var JOB_PAGE_SIZE = 20;
 
 // 이벤트 위임
 document.getElementById('tab-bar').addEventListener('click', function(e) {
@@ -15,6 +18,12 @@ document.getElementById('tab-bar').addEventListener('click', function(e) {
 
 document.addEventListener('click', function(e) {
   if (e.target.classList.contains('copy-btn')) { copyCode(e.target.dataset.id); }
+  if (e.target.dataset.apiSub !== undefined) { apiSubTab = e.target.dataset.apiSub; renderContent(); }
+  if (e.target.dataset.jobPage !== undefined) {
+    var key = e.target.dataset.jobKey;
+    jobPages[key] = parseInt(e.target.dataset.jobPage);
+    renderContent();
+  }
 });
 
 function fetchData() {
@@ -87,7 +96,7 @@ function renderOverview() {
       allJobs.push(copy);
     });
   });
-  return cards + renderJobTable(allJobs, true);
+  return cards + renderJobTable(allJobs, true, 'all');
 }
 
 function renderFactory(f) {
@@ -104,11 +113,11 @@ function renderFactory(f) {
     copy.factoryColor = f.color;
     return copy;
   });
-  return stats + '<main>' + renderJobTable(jobs, false) + '</main>';
+  return stats + '<main>' + renderJobTable(jobs, false, f.name) + '</main>';
 }
 
 // ── 작업 테이블 ──
-function renderJobTable(jobs, showFactory) {
+function renderJobTable(jobs, showFactory, pageKey) {
   if (jobs.length === 0) return '<div class="empty-state"><div class="icon">📦</div><div class="text">생산 요청이 없습니다</div></div>';
 
   var sorted = jobs.slice().sort(function(a, b) {
@@ -117,13 +126,20 @@ function renderJobTable(jobs, showFactory) {
     return new Date(b.startedAt) - new Date(a.startedAt);
   });
 
+  var key = pageKey || 'default';
+  var totalPages = Math.ceil(sorted.length / JOB_PAGE_SIZE);
+  var currentPage = Math.min(jobPages[key] || 1, totalPages || 1);
+  jobPages[key] = currentPage;
+  var paged = sorted.slice((currentPage - 1) * JOB_PAGE_SIZE, currentPage * JOB_PAGE_SIZE);
+
   var fth = showFactory ? '<th>공장</th>' : '';
-  var html = '<table><thead><tr>' + fth +
+  var html = '<div style="color:#888;font-size:0.8rem;margin-bottom:0.3rem">총 ' + sorted.length + '건</div>' +
+    '<table><thead><tr>' + fth +
     '<th>요청자</th><th>작업 ID</th><th>발주 번호</th><th>부품</th>' +
     '<th style="text-align:center">수량</th><th>상태</th>' +
     '<th>진행률</th><th>경과 시간</th><th>상세</th></tr></thead><tbody>';
 
-  sorted.forEach(function(job) {
+  paged.forEach(function(job) {
     var elapsed = formatElapsed(job.startedAt, job.completedAt);
     var isDone = job.statusType === 'done';
     var isWait = job.statusType === 'waiting';
@@ -159,17 +175,42 @@ function renderJobTable(jobs, showFactory) {
       '<td class="elapsed ' + (isDone ? 'done' : 'active') + '">' + elapsed + '</td>' +
       '<td class="detail">' + (job.detail||'') + '</td></tr>';
   });
-  return html + '</tbody></table>';
+  html += '</tbody></table>';
+  if (totalPages > 1) {
+    html += '<div style="display:flex;justify-content:center;align-items:center;gap:1rem;margin-top:0.5rem;font-size:0.85rem;color:#aaa">';
+    if (currentPage > 1) html += '<button data-job-page="' + (currentPage - 1) + '" data-job-key="' + key + '" style="padding:0.3rem 0.8rem;border:1px solid #555;border-radius:4px;background:#2a2a3e;color:#ddd;cursor:pointer">◀ 이전</button>';
+    html += '<span>' + currentPage + ' / ' + totalPages + '</span>';
+    if (currentPage < totalPages) html += '<button data-job-page="' + (currentPage + 1) + '" data-job-key="' + key + '" style="padding:0.3rem 0.8rem;border:1px solid #555;border-radius:4px;background:#2a2a3e;color:#ddd;cursor:pointer">다음 ▶</button>';
+    html += '</div>';
+  }
+  return html;
 }
 
 // ── API 문서 ──
 function renderApiDocs() {
   var h = location.hostname;
-  var html = '<div class="api-docs">';
+
+  var subTabs = [
+    { id: 'all', label: '📋 전체', color: '#f39c12' },
+    { id: 'engine', label: '🔧 엔진', color: '#e74c3c' },
+    { id: 'tire', label: '🛞 타이어', color: '#3498db' },
+    { id: 'battery', label: '🔋 배터리', color: '#2ecc71' },
+    { id: 'chaos', label: '💥 장애 주입', color: '#f39c12' }
+  ];
+
+  var html = '<div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">';
+  subTabs.forEach(function(t) {
+    var active = apiSubTab === t.id;
+    html += '<button data-api-sub="' + t.id + '" style="padding:0.4rem 1rem;border:1px solid ' +
+      (active ? t.color : '#555') + ';border-radius:6px;background:' +
+      (active ? t.color + '22' : '#2a2a3e') + ';color:' +
+      (active ? t.color : '#aaa') + ';cursor:pointer;font-size:0.85rem">' + t.label + '</button>';
+  });
+  html += '</div><div class="api-docs">';
 
   var sections = [
     {
-      name: '🔧 엔진 공장', port: 3001, color: '#e74c3c',
+      id: 'engine', name: '🔧 엔진 공장', port: 3001, color: '#e74c3c',
       endpoints: [
         { method: 'POST', path: '/api/produce', desc: '엔진 생산 요청 — 비동기 처리, 202 Accepted 반환',
           curl: 'curl -X POST http://HOST:3001/api/produce \\\n  -H "Content-Type: application/json" \\\n  -d \'{"purchaseOrderId":"PO-001","partId":"ENGINE-V6","quantity":10}\'',
@@ -182,7 +223,7 @@ function renderApiDocs() {
       ]
     },
     {
-      name: '🛞 타이어 공장', port: 3002, color: '#3498db',
+      id: 'tire', name: '🛞 타이어 공장', port: 3002, color: '#3498db',
       endpoints: [
         { method: 'POST', path: '/api/manufacture', desc: '타이어 제조 요청 — 단계별 진행 (고무혼합→성형→가황→품질검사→완료)',
           curl: 'curl -X POST http://HOST:3002/api/manufacture \\\n  -H "Content-Type: application/json" \\\n  -d \'{"purchaseOrderId":"PO-002","partId":"TIRE-R18","quantity":40}\'',
@@ -195,7 +236,7 @@ function renderApiDocs() {
       ]
     },
     {
-      name: '🔋 배터리 공장', port: 3003, color: '#2ecc71',
+      id: 'battery', name: '🔋 배터리 공장', port: 3003, color: '#2ecc71',
       endpoints: [
         { method: 'POST', path: '/api/orders', desc: '배터리 주문 접수 — 200 OK 반환 (엔진/타이어와 다름!)',
           curl: 'curl -X POST http://HOST:3003/api/orders \\\n  -H "Content-Type: application/json" \\\n  -d \'{"purchaseOrderId":"PO-003","partId":"BATTERY-72KWH","quantity":5}\'',
@@ -208,7 +249,7 @@ function renderApiDocs() {
       ]
     },
     {
-      name: '💥 장애 주입 API', port: null, color: '#f39c12', note: '3개 공장 공통',
+      id: 'chaos', name: '💥 장애 주입 API', port: null, color: '#f39c12', note: '3개 공장 공통',
       endpoints: [
         { method: 'POST', path: '/admin/chaos', desc: '장애 주입 — shutdown(503), delay(30s), error-rate(50%)',
           curl: '# 엔진 공장에 shutdown 장애 60초 주입\ncurl -X POST http://HOST:3001/admin/chaos \\\n  -H "Content-Type: application/json" \\\n  -d \'{"type":"shutdown","durationSeconds":60}\'',
@@ -222,7 +263,9 @@ function renderApiDocs() {
     }
   ];
 
-  sections.forEach(function(sec) {
+  var filtered = apiSubTab === 'all' ? sections : sections.filter(function(s) { return s.id === apiSubTab; });
+
+  filtered.forEach(function(sec) {
     var portLabel = sec.port ? ':' + sec.port : '';
     var noteLabel = sec.note ? sec.note : '';
     html += '<div class="api-factory"><div class="api-factory-header" style="background:' + sec.color + '18">' +
