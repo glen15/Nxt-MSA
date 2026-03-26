@@ -88,7 +88,7 @@ NxtCar → SNS(ordering) → SQS → Lambda(order-all) → 공장 API
 1. AWS 콘솔 → **Lambda** → **함수 생성**
 2. 함수 이름: `<USER_PREFIX>-receive-lambda` (예: `kmucd1-00-receive-lambda`)
 3. 런타임: **Node.js 20.x** 이상
-4. 역할: **기존 역할 사용** → `Nxt-msa-lambda-role`
+4. 역할: **기본 실행 역할 변경** → **다른 역할 사용** → `Nxt-msa-lambda-role`
 5. **함수 생성**
 
 ### 4-2. 코드 입력
