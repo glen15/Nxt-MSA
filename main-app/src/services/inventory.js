@@ -25,8 +25,7 @@ async function checkAndOrder(partId) {
     return { needed: false, part, alreadyOrdered: true };
   }
 
-  // 임계치 이하 → 발주 진행 플래그 설정 + 발주 생성
-  await partsModel.setOrderPending(partId, true);
+  // 임계치 이하 → 발주 생성
   const hasSns = !!config.sns.orderingTopicArn;
   const purchaseOrder = {
     purchaseOrderId: uuidv4(),
@@ -38,13 +37,17 @@ async function checkAndOrder(partId) {
 
   await purchaseOrdersModel.create(purchaseOrder);
 
-  // SNS 발행
-  await publishOrderingMessage({
+  // SNS 발행 — 성공 시에만 orderPending 플래그 설정
+  const published = await publishOrderingMessage({
     purchaseOrderId: purchaseOrder.purchaseOrderId,
     partId,
     quantity: part.orderQuantity,
     category: PART_CATEGORY[partId] || partId.split('-')[0].toLowerCase(),
   });
+
+  if (published) {
+    await partsModel.setOrderPending(partId, true);
+  }
 
   return { needed: true, part, purchaseOrder };
 }
