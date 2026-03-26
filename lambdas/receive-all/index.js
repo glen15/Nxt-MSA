@@ -20,21 +20,22 @@ exports.handler = async (event) => {
     const { purchaseOrderId, partId, quantity, factoryId } = message;
     console.log(`[입고] 메시지 수신: ${partId} × ${quantity} from ${factoryId}`, JSON.stringify(message));
 
-    // 1. 재고 충전
+    // 1. 재고 충전 + orderPending 해제
     try {
       const stockResult = await docClient.send(
         new UpdateCommand({
           TableName: PARTS_TABLE,
           Key: { partId },
-          UpdateExpression: 'SET currentStock = currentStock + :qty, updatedAt = :now',
+          UpdateExpression: 'SET currentStock = currentStock + :qty, orderPending = :false, updatedAt = :now',
           ExpressionAttributeValues: {
             ':qty': quantity,
+            ':false': false,
             ':now': new Date().toISOString(),
           },
           ReturnValues: 'ALL_NEW',
         })
       );
-      console.log(`[입고→재고] ${partId} +${quantity} → 현재: ${stockResult.Attributes.currentStock}`);
+      console.log(`[입고→재고] ${partId} +${quantity} → 현재: ${stockResult.Attributes.currentStock} (발주대기 해제)`);
     } catch (err) {
       console.error(`[입고→재고] 실패: ${partId}`, err.message);
       throw err;

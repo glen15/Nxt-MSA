@@ -19,15 +19,14 @@ async function checkAndOrder(partId) {
     return { needed: false, part };
   }
 
-  // 이미 진행 중인 발주가 있으면 중복 발주 방지
-  const allPOs = await purchaseOrdersModel.getAll();
-  const pendingPO = allPOs.find(po => po.partId === partId && (po.status === 'ORDERED' || po.status === 'PENDING'));
-  if (pendingPO) {
-    console.log(`[발주 스킵] ${partId} — 이미 진행 중: ${pendingPO.purchaseOrderId.slice(0, 8)}`);
+  // 이미 발주 진행 중이면 스킵 (orderPending 플래그)
+  if (part.orderPending) {
+    console.log(`[발주 스킵] ${partId} — 이미 발주 진행 중`);
     return { needed: false, part, alreadyOrdered: true };
   }
 
-  // 임계치 이하 → 발주 생성
+  // 임계치 이하 → 발주 진행 플래그 설정 + 발주 생성
+  await partsModel.setOrderPending(partId, true);
   const hasSns = !!config.sns.orderingTopicArn;
   const purchaseOrder = {
     purchaseOrderId: uuidv4(),

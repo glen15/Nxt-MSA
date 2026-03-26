@@ -54,4 +54,18 @@ async function upsert(item) {
   return item;
 }
 
-module.exports = { getAll, getById, deductStock, addStock, upsert };
+async function setOrderPending(partId, pending) {
+  await docClient.send(
+    new UpdateCommand({
+      TableName: TABLE,
+      Key: { partId },
+      UpdateExpression: 'SET orderPending = :p, updatedAt = :now',
+      ExpressionAttributeValues: {
+        ':p': pending,
+        ':now': new Date().toISOString(),
+      },
+    })
+  );
+}
+
+module.exports = { getAll, getById, deductStock, addStock, upsert, setOrderPending };
