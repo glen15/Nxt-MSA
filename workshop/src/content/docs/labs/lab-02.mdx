@@ -2,6 +2,9 @@
 title: "Lab 02: 공장 서버 탐험"
 ---
 
+import { Image } from 'astro:assets';
+import coupling from '../../../assets/images/coupling-comparison.png';
+
 
 ## 목표
 강사의 공장 서버에 접속하여 3개 공장의 API 차이를 직접 확인하고,
@@ -89,6 +92,8 @@ http://<공장IP>:3000
 > 이 상황에서 우리 서버는 어떻게 3개 공장과 통신해야 할까요?
 
 ---
+
+<Image src={coupling} alt="강결합 vs 느슨한 결합 비교" />
 
 ## Step 3: 강결합 — "직접 호출하면 어떻게 되는가" (15분)
 

@@ -2,6 +2,9 @@
 title: "Lab 05: 입고 경로"
 ---
 
+import { Image } from 'astro:assets';
+import callback from '../../../assets/images/callback-pattern.png';
+
 
 ## 목표
 공장에서 생산이 완료되면 **자동으로 재고가 충전**되고,
@@ -24,6 +27,8 @@ Step 7  전체 E2E 테스트               → 주문 → 발주 → 생산 → 
 ```
 
 ---
+
+<Image src={callback} alt="콜백 패턴 — callbackTopicArn 흐름" />
 
 ## 아키텍처: 콜백 패턴
 
