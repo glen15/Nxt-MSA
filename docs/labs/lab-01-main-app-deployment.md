@@ -9,6 +9,31 @@ DynamoDB를 연결하여 차량 주문 시스템을 완성한다.
 - 소스 코드 클론 완료: `git clone https://github.com/glen15/Nxt-MSA.git`
 - 강사가 안내한 본인 유저 ID (예: `kmucd1-99`)
 
+### Cloud9 자격증명 설정
+
+소스 클론 직후, 아래 두 가지를 설정합니다.
+Cloud9의 임시 자격증명(AMTC) 대신 **EC2 인스턴스 프로파일**을 사용해야
+서버가 토큰 만료로 중단되지 않습니다.
+
+**1. AMTC 비활성화**
+
+Cloud9 상단 메뉴 → ⚙️ **Preferences** → **AWS Settings** → **AWS managed temporary credentials** → **OFF**
+
+**2. 인스턴스 프로파일 연결**
+
+1. AWS 콘솔 → **EC2** → **인스턴스**
+2. Cloud9 인스턴스 선택 (이름에 `cloud9` 포함)
+3. **작업** → **보안** → **IAM 역할 수정**
+4. `SafeInstanceProfile-<본인유저ID>` 선택 (예: `SafeInstanceProfile-kmucd1-99`)
+5. **IAM 역할 업데이트**
+
+설정 확인:
+```bash
+aws sts get-caller-identity
+```
+
+`SafeRole-<본인유저ID>`가 표시되면 성공입니다.
+
 ## 전체 흐름
 
 ```
